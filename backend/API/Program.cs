@@ -1,31 +1,45 @@
 // using Microsoft.AspNetCore.Authentication;
 using API.core.AppDbContext;
+using API.core.AutomapperConfig;
+using API.core.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Web;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 //     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.AddIdentity<User, IdentityRole>(options =>
+{
+    // 要求邮箱必须唯一（不能两个用户用同一个邮箱）--下面这行:防止两个用户注册同一个邮箱,这样邮箱才能当"身份证"用
+    options.User.RequireUniqueEmail = true;
+})
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+
+
+builder.Services.AddAutoMapper(typeof(AutomapperConfig));
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddCors(options =>
+builder.Services.AddCors(x =>
 {
-    options.AddDefaultPolicy(policy =>
+    x.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
 });
-
 
 var app = builder.Build();
 
@@ -37,11 +51,11 @@ if (app.Environment.IsDevelopment())
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
-app.UseRouting();
 app.UseCors();
+
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
