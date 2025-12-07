@@ -11,16 +11,24 @@ import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Group } from "@mui/icons-material";
-import { Link } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
+import { getUserInfo } from "./http";
 
 const pages = ["ACTIVITIES", "ABOUT", "CONTACT", "CREATE EVENT"];
 const settings = ["Profile", "Account", "Dashboard", "Logout"];
 
-export default function Navbar({ isLoginedIn }) {
+export default function Navbar() {
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
+  const [user, setUser] = useState(null);
+  const isLoginedIn = true;
+
+  useEffect(() => {
+    const info = getUserInfo();
+    setUser(info);
+  }, []);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -47,35 +55,8 @@ export default function Navbar({ isLoginedIn }) {
         }}
       >
         <Toolbar disableGutters>
-          {/* <AdbIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
-          <Typography
-            variant="h4"
-            noWrap
-            component="a"
-            sx={{
-              mr: 2,
-              display: { xs: "none", md: "flex" },
-              fontFamily: "monospace",
-              fontSize: "2rem",
-              fontWeight: 700,
-              color: "inherit",
-              textDecoration: "none",
-            }}
-          >
-            Logo
-          </Typography> */}
           <Group sx={{ height: 50, width: 50, mr: 6 }} />
           <Box sx={{ flexGrow: 1, display: { xs: "flex", md: 1 } }}>
-            {/* <IconButton
-              size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleOpenNavMenu}
-              color="inherit"
-            >
-              <MenuIcon />
-            </IconButton> */}
             <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
               {pages.map((page) => (
                 <Button

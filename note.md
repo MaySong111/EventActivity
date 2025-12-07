@@ -31,7 +31,11 @@ YourProject/
 就两层,简单点, 不要弄复杂
 
 
+# login逻辑
+用户登录成功 → 存 Token → Navbar 显示用户名和头像
+
 # react query--读取数据（GET）--就是get请求
+现在叫Tanstack query
 替代的是: useEffect + fetch + useState
 不是zustand
 
@@ -183,7 +187,7 @@ function ActivitiesPage() {
 
 步骤 3：从返回值里取数据
 推荐解构
-const { data, isLoading, error } = useQuery({
+const { data, isPending, error } = useQuery({
   queryKey: ['activities'],
   queryFn: fetchActivities
 });
@@ -192,7 +196,7 @@ const { data, isLoading, error } = useQuery({
 也就是步骤二和步骤三合并
 
 步骤3: 解构 + 重命名
-const { data: events, isLoading, error } = useQuery({
+const { data: events, isPending, error } = useQuery({
   queryKey: ['activities'],
   queryFn: fetchActivities
 });
@@ -203,13 +207,13 @@ const { data: events, isLoading, error } = useQuery({
 
 步骤 4：使用数据
 function ActivitiesPage() {
-  const { data: events = [], isLoading, error } = useQuery({
+  const { data: events = [], isPending, error } = useQuery({
     queryKey: ['activities'],
     queryFn: fetchActivities
   });
 
   // 处理加载状态
-  if (isLoading) {
+  if (isPending) {
     return <div>加载中...</div>;
   }
 
@@ -505,3 +509,39 @@ export default function ActivityList({ activities, onView }) {
 
 
 
+# ActivityDetailPage到底是用! 还是用null判断
+if(!activity) return <div>Activity not found</div>;
+
+!activity  // 以下情况都返回 true：
+- activity === null          ✓
+- activity === undefined     ✓
+- activity === 0             ✓ (数字0)
+- activity === ""            ✓ (空字符串)
+- activity === false         ✓
+- activity === {}            ✗ (空对象是 truthy!)
+
+
+activity == null 只匹配：
+activity == null  // 只有这两种情况返回 true：
+- activity === null          ✓
+- activity === undefined     ✓
+
+
+
+
+推荐---不设置默认值:
+
+const { data: activity, isPending } = useQuery(...);
+if (isPending) return <div>Loading...</div>;
+if (!activity) return <div>Activity not found</div>;
+// 现在 !activity 能正常工作了
+
+
+# ActivityDetailPage.jsx中的4个部分是直接复制老师的代码的
+因为老师说没有意义,都是一些样式,直接复制就行了
+
+# 调整显示的日期形式
+从后端返回的日期都是; 2025-11-02T03:10:48.323188Z 这样形式的
+
+先安装包:--这个是目前最流行的修改日期的小安装包
+npm i date-fns
