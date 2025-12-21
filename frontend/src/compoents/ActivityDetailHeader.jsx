@@ -8,6 +8,13 @@ export default function ActivityDetailsHeader({ activity }) {
   const isGoing = true;
   const loading = false;
 
+  // console.log("ActivityDetailsHeader render", activity);
+  // console.log(
+  //   "ActivityDetailsHeader date:",
+  //   activity.date,
+  //   typeof activity.date
+  // );
+
   return (
     <Card
       sx={{
@@ -27,8 +34,8 @@ export default function ActivityDetailsHeader({ activity }) {
       <CardMedia
         component="img"
         height="300"
-        image={`/images/categoryImages/${activity.category}.jpg`}
-        alt={`${activity.category} image`}
+        image={`/images/categoryImages/${activity?.category}.jpg`}
+        alt={`${activity?.category} image`}
       />
       <Box
         sx={{
@@ -52,7 +59,7 @@ export default function ActivityDetailsHeader({ activity }) {
             {activity.title}
           </Typography>
           <Typography variant="subtitle1">
-            {format(activity?.date, "dd MMM yyyy h:mm a")}
+            {format(activity.date, "dd MMM yyyy h:mm a")}
           </Typography>
           <Typography variant="subtitle2">
             Hosted by{" "}
@@ -72,6 +79,7 @@ export default function ActivityDetailsHeader({ activity }) {
               <Button
                 variant="contained"
                 color={isCancelled ? "success" : "error"}
+                sx={{ borderRadius: 2 }}
                 onClick={() => {}}
               >
                 {isCancelled ? "Re-activate Activity" : "Cancel Activity"}
@@ -80,8 +88,9 @@ export default function ActivityDetailsHeader({ activity }) {
                 variant="contained"
                 color="primary"
                 component={Link}
-                to={`/manage/activityId`}
+                to={`/edit/${activity.id}`}
                 disabled={isCancelled}
+                sx={{ borderRadius: 2 }}
               >
                 Manage Event
               </Button>

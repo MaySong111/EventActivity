@@ -1,7 +1,7 @@
+using API.core.Dtos.Auth;
 using API.core.Dtos.Auto;
 using API.core.Entities;
 using API.core.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,8 +39,9 @@ namespace API.Controllers
             return Created("", new { Message = "User registered successfully." });
         }
 
+
         [HttpPost("login")]
-        public async Task<ActionResult<ResponseApiDto>> Login([FromBody] LoginDto dto)
+        public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto)
         {
             // 1. find user by email
             var user = await userManager.FindByEmailAsync(dto.Email);
@@ -60,16 +61,19 @@ namespace API.Controllers
             {
                 // 3. return user info (you might want to return a token here instead), include token in ResponseApiDto
                 // 3.1 generate JWT token
-                var token = await jwtTokenCreator.GenerateToken(user);
+                var token = await jwtTokenCreator.GenerateToken(user, dto.RememberMe);
                 // 3.2 create response DTO
-                var response = new ResponseApiDto
+                return Ok(new AuthResponseDto
                 {
+                    IsSuccess = true,
+                    Message = "Login successful.",
                     Token = token,
-                    DisplayName = user.DisplayName,
-                    Email = user.Email
-                };
-                // 3.3 return response
-                return Ok(response);
+                    UserInfo = new UserInfoDto
+                    {
+                        DisplayName = user.DisplayName,
+                        ImageUrl = user.ImageUrl ?? "/default-avatar.png" // Default image URL if ImageUrl is null
+                    }
+                });
             }
 
         }

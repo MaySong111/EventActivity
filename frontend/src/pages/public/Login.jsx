@@ -1,46 +1,135 @@
-// pages/public/Login.jsx
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { loginUser } from "../../http";
+import {
+  Button,
+  TextField,
+  Typography,
+  Box,
+  Container,
+  Paper,
+  FormControlLabel,
+  Checkbox,
+} from "@mui/material";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import { useState } from "react";
+import useStore from "../../store/useAuthStore";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    rememberMe: false,
+  });
+
+  const login = useStore((state) => state.login);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+  // console.log("Current formData:", formData);
 
   const loginMutation = useMutation({
-    mutationFn: async (credentials) => {
-      const response = await fetch("https://localhost:5001/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-      });
+    mutationFn: loginUser,
 
-      if (!response.ok) throw new Error("登录失败");
-      return response.json();
-    },
-    onSuccess: (data) => {
-      // 存 Token 到 localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.userInfo));
-
-      // 跳转到活动页面
+    onSuccess: (result) => {
+      // console.log("Login successful:", result);
+      const { token, userInfo } = result;
+      login(userInfo, token);
       navigate("/activities");
     },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
+
     loginMutation.mutate({
-      email: formData.get("email"),
-      password: formData.get("password"),
+      email: formData.email,
+      password: formData.password,
+      rememberMe: formData.rememberMe,
     });
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <TextField name="email" label="Email" />
-      <TextField name="password" label="Password" type="password" />
-      <Button type="submit">Login</Button>
-      {loginMutation.isError && <Typography color="error">登录失败</Typography>}
-    </form>
+    <Container
+      component="main"
+      maxWidth="xs"
+      sx={{
+        marginTop: 8,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      <Paper elevation={3} sx={{ padding: 4, width: "100%" }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+          <LockOpenIcon sx={{ color: "secondary.main", fontSize: 40 }} />
+          <Typography component="h1" variant="h5" sx={{ mt: 1 }}>
+            Sign in
+          </Typography>
+        </Box>
+
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <TextField
+            fullWidth
+            margin="normal"
+            name="email"
+            label="Email"
+            autoComplete="email"
+            autoFocus
+            value={formData.email}
+            onChange={handleChange}
+          />
+          <TextField
+            fullWidth
+            margin="normal"
+            name="password"
+            label="Password"
+            type="password"
+            autoComplete="current-password"
+            value={formData.password}
+            onChange={handleChange}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="rememberMe"
+                color="primary"
+                checked={formData.rememberMe}
+                onChange={handleChange}
+              />
+            }
+            label="Remember me"
+          />
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            disabled={loginMutation.isPending}
+            sx={{ mt: 3, mb: 2 }}
+          >
+            {loginMutation.isPending ? "Logging in..." : "Login"}
+          </Button>
+          <Typography variant="body2" align="center">
+            Don't have an account?
+            <Link to="/register" variant="body2" sx={{ ml: 0.5 }}>
+              Sign up
+            </Link>
+          </Typography>
+        </Box>
+      </Paper>
+    </Container>
   );
 }

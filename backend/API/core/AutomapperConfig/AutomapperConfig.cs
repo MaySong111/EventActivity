@@ -1,7 +1,6 @@
 
-
-using System.Diagnostics;
 using API.core.Dtos;
+using API.core.Entities;
 using AutoMapper;
 
 namespace API.core.AutomapperConfig
@@ -12,7 +11,5 @@ namespace API.core.AutomapperConfig
         {
             CreateMap<CreateActivityDto, Activity>();
         }
-
-
     }
 }

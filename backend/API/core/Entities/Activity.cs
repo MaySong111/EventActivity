@@ -15,6 +15,7 @@ namespace API.core.Entities
         public required string Venue { get; set; }
         public string Latitude { get; set; }
         public string Longitude { get; set; }
+        public List<ActivityAttendee> Attendees { get; set; } = [];
     }
 }
 

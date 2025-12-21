@@ -10,10 +10,15 @@ import {
   Avatar,
   Divider,
 } from "@mui/material";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { format } from "date-fns";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { deleteActivity } from "../http";
+import useAuthStore from "../store/useAuthStore";
 
 export default function ActivityCard({ activity }) {
+  const user = useAuthStore((state) => state.user);
   const isHost = false; // TODO: determine if the current user is the host
   const isGoing = false; // TODO: determine if the current user is going
   const label = isHost
@@ -24,23 +29,49 @@ export default function ActivityCard({ activity }) {
   const isCancelled = false;
   const color = isHost ? "secondary" : isGoing ? "warning" : "default";
 
+  const queryClient = useQueryClient();
+  const deleteActivityMutation = useMutation({
+    mutationFn: deleteActivity,
+    onSuccess: (result) => {
+      queryClient.invalidateQueries(["activities"]);
+      toast.success(result.message);
+    },
+  });
+  const handleDelete = () => {
+    deleteActivityMutation.mutate(activity.id);
+  };
+
   return (
-    <Card elevation={3} sx={{ borderRadius: 3 }}>
+    <Card elevation={3} sx={{ borderRadius: 2}}>
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <CardHeader
           avatar={
             <Avatar
-              sx={{ height: 80, width: 80 }}
+              sx={{ height: 50, width: 50 }}
               src={`/images/categoryImages/${activity?.category}.jpg`}
-              title={activity.title}
-              subheader={
-                <>
-                  Hosted by <Link to={`/profiles/bob}`}>bob</Link>
-                </>
-              }
             />
           }
+          title={
+            <Typography
+              variant="h5"
+              sx={{ whiteSpace: "nowrap", fontWeight: 500, fontSize: "1.4rem" }}
+            >
+              {activity.title}
+            </Typography>
+          }
+          subheader={
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              sx={{ fontWeight: 400, fontSize: "1rem" }}
+            >
+              Hosted by{" "}
+              <Link to={`/profile/${user.id}`}>{activity.displayName}</Link>
+            </Typography>
+          }
+          sx={{ flexGrow: 1, p: 2, "& .MuiCardHeader-avatar": { mr: 1.5 } }}
         />
+
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mr: 2 }}>
           {isHost ||
             (isGoing && (
@@ -82,15 +113,27 @@ export default function ActivityCard({ activity }) {
       <CardContent sx={{ pb: 2 }}>
         <Typography variant="body2">{activity.description}</Typography>
 
-        <Button
-          component={Link}
-          to={`/activities/${activity.id}`}
-          size="medium"
-          variant="contained"
-          sx={{ display: "flex", justifySelf: "self-end", borderRadius: 3 }}
-        >
-          View
-        </Button>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+          <Button
+            size="medium"
+            variant="contained"
+            color="error"
+            sx={{ borderRadius: 2}}
+            onClick={handleDelete}
+          >
+            Delete
+          </Button>
+
+          <Button
+            component={Link}
+            to={`/activities/${activity.id}`}
+            size="medium"
+            variant="contained"
+            sx={{ borderRadius: 2}}
+          >
+            View
+          </Button>
+        </Box>
       </CardContent>
     </Card>
   );
