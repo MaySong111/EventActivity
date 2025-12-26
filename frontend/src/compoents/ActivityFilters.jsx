@@ -40,7 +40,7 @@ export default function ActivityFilters() {
                 <ListItemText primary="All Activities" />
               </MenuItem>
               <MenuItem>
-                <ListItemText primary="I'm going" />
+                <ListItemText primary="I'm attending" />
               </MenuItem>
               <MenuItem>
                 <ListItemText primary="I'm hosting" />

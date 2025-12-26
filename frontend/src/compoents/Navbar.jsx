@@ -27,7 +27,7 @@ export default function Navbar() {
   const isLoginedIn = !!token;
 
   return (
-    <AppBar position="static">
+    <AppBar position="fixed">
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         <Group sx={{ height: 40, width: 40 }} />
         {/* 左侧导航 */}
@@ -86,7 +86,7 @@ export default function Navbar() {
               >
                 <Button
                   component={Link}
-                  to={`/profiles/${user?.id}`}
+                  to={`/profiles/${user.displayName}`}
                   sx={{
                     justifyContent: "flex-start",
                     width: "100%",

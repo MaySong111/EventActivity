@@ -117,16 +117,13 @@ export default function CreatePage() {
   // 这个id就是activity.id, 也是ActivityPage页面中点击view传递的id到ActivityDetailPage页面的id,然后点击manage event按钮跳转到的id到CreatePage页面!!!!!!!!!!!!!
   // 所以这里选择用缓存, 不用再fetch数据了---当然可以重新获取这个id的activity数据, 但是没必要!!!!!
   const { id } = useParams();
+  // console.log("CreatePage id param:", id);
   const isEditMode = !!id; // 有id就是编辑模式,没有id就是创建模式
   const { data: activity } = useQuery({
     queryKey: ["activities", id],
     queryFn: () => getActivity(id),
     // enabled: !!id, // 只有当 id 存在时才执行该查询--不用isEditMode这一变量也行,但是因为我后续的jsx中要用这个, 就定义了一个新的变量isEditMode
     enabled: isEditMode, // 只有编辑模式才执行查询
-    select: (response) => {
-      // console.log("Fetched activity for edit:", response.data);
-      return response.data;
-    },
   });
 
   // part2: 编辑功能的实现---2.2把获取到的activity数据填充到表单中---编辑模式下填充form
@@ -203,6 +200,12 @@ export default function CreatePage() {
       createActivityMutation.mutate({ ...form, date: formattedDate });
     }
   };
+
+  // part2: 编辑功能的实现---2.1权限校验---只有host才能编辑
+  if (isEditMode && activity && !activity.isHost) {
+    navigate(`/activities/${id}`);
+    return null;
+  }
 
   return (
     <Paper sx={{ borderRadius: 3, p: 3 }}>

@@ -28,7 +28,7 @@ export default function App() {
             <Route path="/activities/:id" element={<ActivityDetailPage />} />
             <Route path="/create-activity" element={<CreateActivity />} />
             <Route path="/edit/:id" element={<CreateActivity />} />
-            <Route path="/profiles/:id" element={<ProfilePage />} />
+            <Route path="/profiles/:name" element={<ProfilePage />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />

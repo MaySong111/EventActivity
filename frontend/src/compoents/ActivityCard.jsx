@@ -15,21 +15,20 @@ import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { deleteActivity } from "../http";
-import useAuthStore from "../store/useAuthStore";
 
 export default function ActivityCard({ activity }) {
-  const user = useAuthStore((state) => state.user);
-  const isHost = false; // TODO: determine if the current user is the host
-  const isGoing = false; // TODO: determine if the current user is going
-  const label = isHost
-    ? "You are hosting this activity"
-    : isGoing
-    ? "You are going to this activity"
-    : null;
-  const isCancelled = false;
-  const color = isHost ? "secondary" : isGoing ? "warning" : "default";
+  // console.log("ActivityCard activity:", activity);
+  console.log("ActivityCard activity id:", activity.id);
+  const { isHost, isAttending } = activity;
 
-  console.log("ActivityCard activity:", activity);
+  const label = isHost
+    ? "You are hosting"
+    : isAttending
+    ? "You are attending"
+    : null;
+
+  const isCancelled = activity.isCancelled;
+  const color = isHost ? "secondary" : isAttending ? "warning" : "default";
 
   const queryClient = useQueryClient();
   const deleteActivityMutation = useMutation({
@@ -73,14 +72,12 @@ export default function ActivityCard({ activity }) {
               </Link>
             </Typography>
           }
-          sx={{ flexGrow: 1, p: 2, "& .MuiCardHeader-avatar": { mr: 1.5 } }}
         />
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mr: 2 }}>
-          {isHost ||
-            (isGoing && (
-              <Chip label={label} color={color} sx={{ borderRadius: 2 }} />
-            ))}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {(isHost || isAttending) && (
+            <Chip label={label} color={color} sx={{ borderRadius: 2 }} />
+          )}
           {isCancelled && (
             <Chip label="Cancelled" color="error" sx={{ borderRadius: 2 }} />
           )}
@@ -100,17 +97,23 @@ export default function ActivityCard({ activity }) {
           <Place sx={{ mr: 1, ml: 3 }} />
           <Typography variant="body2">{activity?.venue}</Typography>
         </Box>
-        <Divider />
+
         <Box
           sx={{
             display: "flex",
             gap: 2,
             backgroundColor: "grey.200",
-            py: 3,
-            pl: 3,
+            p: 1,
           }}
         >
-          Attendees go here
+          {activity.attendees.map((attendee) => (
+            <Avatar
+              key={attendee.id}
+              src={attendee.image}
+              alt={attendee.displayName}
+              to={`/profiles/${attendee.displayName}`}
+            />
+          ))}
         </Box>
       </CardContent>
 
@@ -118,16 +121,17 @@ export default function ActivityCard({ activity }) {
         <Typography variant="body2">{activity.description}</Typography>
 
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
-          <Button
-            size="medium"
-            variant="contained"
-            color="error"
-            sx={{ borderRadius: 2 }}
-            onClick={handleDelete}
-          >
-            Delete
-          </Button>
-
+          {isHost && (
+            <Button
+              size="medium"
+              variant="contained"
+              color="error"
+              sx={{ borderRadius: 2 }}
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+          )}
           <Button
             component={Link}
             to={`/activities/${activity.id}`}

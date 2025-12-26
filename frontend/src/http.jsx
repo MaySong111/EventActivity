@@ -21,7 +21,21 @@ export async function getActivities() {
     useAuthStore.getState().logout();
     window.location.href = "/login";
   }
-  return result.json();
+
+  const data = await result.json();
+  console.log("getActivities fetched data:", data);
+  const currentUser = useAuthStore.getState().user;
+
+  // 给每个活动加上 isHost 和 isGoing
+  const activitiesWithFlags = await data.map((activity) => ({
+    ...activity,
+    isHost: activity.hostId === currentUser?.id,
+    isAttending: activity.attendees.some(
+      (attendee) => attendee.id === currentUser?.id
+    ),
+  }));
+
+  return activitiesWithFlags;
 }
 
 export async function getActivity(id) {
@@ -29,7 +43,17 @@ export async function getActivity(id) {
     headers: getAuthHeaders(),
   });
 
-  return result.json();
+  const data = await result.json();
+  console.log("getActivity fetched data:", data);
+  const currentUser = useAuthStore.getState().user;
+
+  // 给活动加上 isHost 和 isGoing 标志
+  const activityWithFlags = {
+    ...data,
+    isHost: data.hostId === currentUser?.id,
+    isAttending: data.attendees.some((attendee) => attendee.id === currentUser?.id),
+  };
+  return activityWithFlags;
 }
 
 export async function createActivity(activity) {
@@ -54,10 +78,11 @@ export async function updateActivity(id, activity) {
     headers: getAuthHeaders(),
     body: JSON.stringify(activity),
   });
-  if (!result.ok) {
-    throw new Error("Update failed");
+  if (result.status === 403) {
+    throw new Error("Forbidden: You are not the host of this activity");
   }
-  return result.json();
+
+  return await result.json();
 }
 
 export async function deleteActivity(id) {
@@ -78,6 +103,7 @@ export async function loginUser(data) {
   if (!response.ok) {
     throw new Error("Login failed");
   }
+
   if (response.status === 401) {
     // if token is expired or invalid,clear it and redirect to login page
     useAuthStore.getState().logout();

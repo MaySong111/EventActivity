@@ -13,13 +13,6 @@ export default function ActivityDetailPage() {
   const { data: activity, isPending } = useQuery({
     queryKey: ["activities", id],
     queryFn: () => getActivity(id),
-    select: (response) => {
-      console.log(
-        "Fetched activity detail,has id, completed object:",
-        response.data
-      );
-      return response.data;
-    },
   });
   //以上就解决了,所以并不需要从父组件ActivitiesPage中的ActivityCard中传activity过来!!!!!! ,直接用id去fetch就行
   // console.log("ActivityDetailPage activity:", activity);

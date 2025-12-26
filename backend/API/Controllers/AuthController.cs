@@ -1,5 +1,6 @@
 using API.core.Dtos.Auth;
 using API.core.Dtos.Auto;
+using API.core.Dtos.Profile;
 using API.core.Entities;
 using API.core.Services;
 using Microsoft.AspNetCore.Identity;
@@ -68,8 +69,9 @@ namespace API.Controllers
                     IsSuccess = true,
                     Message = "Login successful.",
                     Token = token,
-                    UserInfo = new UserInfoDto
+                    UserInfo = new UserProfileDto
                     {
+                        Id = user.Id,
                         DisplayName = user.DisplayName,
                         ImageUrl = user.ImageUrl ?? "/default-avatar.png" // Default image URL if ImageUrl is null
                     }

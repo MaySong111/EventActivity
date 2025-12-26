@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
+import { Toolbar } from "@mui/material";
 // import useAuthStore from "../store/useAuthStore";
 
 export default function Layout() {
@@ -16,6 +17,7 @@ export default function Layout() {
   return (
     <>
       <Navbar />
+      <Toolbar />
       <Outlet />
     </>
   );

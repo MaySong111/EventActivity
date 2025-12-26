@@ -3,17 +3,9 @@ import { format } from "date-fns";
 import { Link } from "react-router-dom";
 
 export default function ActivityDetailsHeader({ activity }) {
-  const isCancelled = false;
-  const isHost = true;
-  const isGoing = true;
-  const loading = false;
-
-  // console.log("ActivityDetailsHeader render", activity);
-  // console.log(
-  //   "ActivityDetailsHeader date:",
-  //   activity.date,
-  //   typeof activity.date
-  // );
+  const isCancelled = activity.isCancelled;
+  const isHost = activity.isHost;
+  const isAttending = activity.isAttending;
 
   return (
     <Card
@@ -72,7 +64,8 @@ export default function ActivityDetailsHeader({ activity }) {
           </Typography>
         </Box>
 
-        {/* Buttons aligned to the right */}
+        {/* Buttons aligned to the right
+        isHost 能看到的的, 以及非 Host 看到的按钮 */}
         <Box sx={{ display: "flex", gap: 2 }}>
           {isHost ? (
             <>
@@ -92,17 +85,17 @@ export default function ActivityDetailsHeader({ activity }) {
                 disabled={isCancelled}
                 sx={{ borderRadius: 2 }}
               >
-                Manage Event
+                Edit activity
               </Button>
             </>
           ) : (
             <Button
               variant="contained"
-              color={isGoing ? "primary" : "info"}
+              color={isAttending ? "primary" : "info"}
               onClick={() => {}}
-              disabled={isCancelled || loading}
+              disabled={isCancelled}
             >
-              {isGoing ? "Cancel Attendance" : "Join Activity"}
+              {isAttending ? "Cancel Attendance" : "Join Activity"}
             </Button>
           )}
         </Box>

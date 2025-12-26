@@ -36,7 +36,6 @@ export default function ActivitiesPage() {
   const { data: activities, isLoading } = useQuery({
     queryKey: ["activities"],
     queryFn: getActivities,
-    select: (response) => response.data,
   });
   // console.log("ActivityPage response data part:", activities);
 
@@ -44,9 +43,6 @@ export default function ActivitiesPage() {
   if (!activities || activities.length === 0)
     return (
       <Box sx={{ textAlign: "center", mt: 10 }}>
-        <Typography variant="h4" gutterBottom>
-          No Activities Found
-        </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
           There are no activities yet. Create one to get started!
         </Typography>
