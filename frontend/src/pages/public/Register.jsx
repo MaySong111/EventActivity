@@ -11,6 +11,7 @@ import {
   Link,
 } from "@mui/material";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
+import toast from "react-hot-toast";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export default function Register() {
     onSuccess: (data) => {
       console.log("Registration successful:", data);
       // 注册成功后，跳转到登录页面
+      toast.success("Registration successful! Please log in.");
       navigate("/login");
     },
   });
@@ -115,7 +117,7 @@ export default function Register() {
           {/* 错误信息 */}
           {registerMutation.isError && (
             <Typography color="error" align="center" sx={{ mt: 1 }}>
-              注册失败
+              {registerMutation.error.message}
             </Typography>
           )}
         </Box>

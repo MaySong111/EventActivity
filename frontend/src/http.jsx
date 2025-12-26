@@ -16,6 +16,11 @@ export async function getActivities() {
   var result = await fetch(`${BASE_URL}/activities`, {
     headers: getAuthHeaders(),
   });
+  if (result.status === 401) {
+    // if token is expired or invalid, clear it and redirect to login page
+    useAuthStore.getState().logout();
+    window.location.href = "/login";
+  }
   return result.json();
 }
 
@@ -23,6 +28,7 @@ export async function getActivity(id) {
   var result = await fetch(`${BASE_URL}/activities/${id}`, {
     headers: getAuthHeaders(),
   });
+
   return result.json();
 }
 
@@ -42,6 +48,7 @@ export async function createActivity(activity) {
 }
 
 export async function updateActivity(id, activity) {
+  console.log("Updating: activity object no id", activity);
   var result = await fetch(`${BASE_URL}/activities/${id}`, {
     method: "PUT",
     headers: getAuthHeaders(),
@@ -61,6 +68,7 @@ export async function deleteActivity(id) {
   return await result.json();
 }
 
+// Authentication APIs--------------------------------
 export async function loginUser(data) {
   var response = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
@@ -71,9 +79,8 @@ export async function loginUser(data) {
     throw new Error("Login failed");
   }
   if (response.status === 401) {
-    // Token 过期或无效，清除并跳转到登录页
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    // if token is expired or invalid,clear it and redirect to login page
+    useAuthStore.getState().logout();
     window.location.href = "/login";
   }
   return response.json();
@@ -91,17 +98,4 @@ export async function registerUser(data) {
     throw new Error("Registration failed");
   }
   return response.json();
-}
-
-export async function getUserInfo() {
-  const response = await fetch(`${BASE_URL}/auth/me`, {
-    headers: {
-      "content-type": "application/json",
-    },
-  });
-  if (!response.ok) {
-    throw new Error("Failed to fetch user info");
-  }
-  const user = await response.json();
-  return user;
 }

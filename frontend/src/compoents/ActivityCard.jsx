@@ -29,6 +29,8 @@ export default function ActivityCard({ activity }) {
   const isCancelled = false;
   const color = isHost ? "secondary" : isGoing ? "warning" : "default";
 
+  console.log("ActivityCard activity:", activity);
+
   const queryClient = useQueryClient();
   const deleteActivityMutation = useMutation({
     mutationFn: deleteActivity,
@@ -42,7 +44,7 @@ export default function ActivityCard({ activity }) {
   };
 
   return (
-    <Card elevation={3} sx={{ borderRadius: 2}}>
+    <Card elevation={3} sx={{ borderRadius: 2 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <CardHeader
           avatar={
@@ -66,7 +68,9 @@ export default function ActivityCard({ activity }) {
               sx={{ fontWeight: 400, fontSize: "1rem" }}
             >
               Hosted by{" "}
-              <Link to={`/profile/${user.id}`}>{activity.displayName}</Link>
+              <Link to={`/profiles/${activity.hostDisplayName}`}>
+                {activity.hostDisplayName}
+              </Link>
             </Typography>
           }
           sx={{ flexGrow: 1, p: 2, "& .MuiCardHeader-avatar": { mr: 1.5 } }}
@@ -118,7 +122,7 @@ export default function ActivityCard({ activity }) {
             size="medium"
             variant="contained"
             color="error"
-            sx={{ borderRadius: 2}}
+            sx={{ borderRadius: 2 }}
             onClick={handleDelete}
           >
             Delete
@@ -129,7 +133,7 @@ export default function ActivityCard({ activity }) {
             to={`/activities/${activity.id}`}
             size="medium"
             variant="contained"
-            sx={{ borderRadius: 2}}
+            sx={{ borderRadius: 2 }}
           >
             View
           </Button>

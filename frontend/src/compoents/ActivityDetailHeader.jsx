@@ -64,10 +64,10 @@ export default function ActivityDetailsHeader({ activity }) {
           <Typography variant="subtitle2">
             Hosted by{" "}
             <Link
-              to={`/profiles/username`}
+              to={`/profiles/${activity.hostDisplayName}`}
               style={{ color: "white", fontWeight: "bold" }}
             >
-              Bob
+              {activity.hostDisplayName}
             </Link>
           </Typography>
         </Box>

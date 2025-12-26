@@ -14,7 +14,10 @@ export default function ActivityDetailPage() {
     queryKey: ["activities", id],
     queryFn: () => getActivity(id),
     select: (response) => {
-      console.log("Fetched activity detail:", response.data);
+      console.log(
+        "Fetched activity detail,has id, completed object:",
+        response.data
+      );
       return response.data;
     },
   });

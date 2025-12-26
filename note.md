@@ -30,6 +30,32 @@ YourProject/
     └── ActivityCard.jsx
 就两层,简单点, 不要弄复杂
 
+## 后端添加ActivityDto,UserProfile原理--很重要
+因为之前就是 Activity User  ActivityAttendee
+
+Activity实体类中public List<ActivityAttendee> Attendees { get; set; } = [];
+然后ActivityAttendee中配置 和 Activity 以及User的一对多的关系
+
+这样就配置好了关系了, 本来是可以的
+
+但是
+[HttpGet]
+        public async Task<ActionResult<List<ResponseActivityDto<Activity>>>> GetActivities()
+        {
+
+            var activities = await context.Activities
+                .Include(a => a.Attendees)
+                .ThenInclude(aa => aa.User)
+                .ToListAsync();
+直接返回return ok(activities)
+会看到报错
+at System.Text.Json.ThrowHelper.ThrowJsonException_SerializerCycleDetected(Int32 maxDepth)
+
+一层层的嵌套,Activity里面包含attend的数据,这里的数据再将User的数据关联,一层层的嵌套
+
+
+
+
 
 # 路由定义的逻辑:
 - 访问 `/` → 只显示 HomePage（图一），没有 Navbar--所以HomePage并不是在layout里面包裹的,所以HomePage 不要放在 Layout 里
@@ -2735,3 +2761,201 @@ useAuthStore.getState().token
 ✔ getState() 负责“从内存中获取当前状态”
 两者不是同一个东西。
 
+
+
+# 后端的投影-以ActivitiesController里的代码为例子
+```c#
+ [HttpGet("{id}")]
+        public async Task<ActionResult<ResponseActivityDto<ActivityDto>>> GetActivityById([FromRoute] string id)
+        {
+            var activity = await context.Activities
+                .Include(a => a.Attendees)
+                .ThenInclude(aa => aa.User)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+           
+这上面的结果就是一张虚拟打表: EF Core 把 Activity / 中间表 / User 的所有列都查出来了
+```
+
+比如在postman 执行:get请求, https://localhost:5001/api/Activities/cab701ad-4f58-4dca-9278-da19c4c68e19
+就会在vscode中的terminal中看到 :
+SELECT a2."Id", a2."Category", a2."City", a2."Date", a2."Description", a2."IsCancelled", a2."Latitude", a2."Longitude", a2."Title", a2."Venue", s."ActivityId", s."UserId", s."DateJoined", s."IsHost", s."Id", s."AccessFailedCount", s."Bio", s."ConcurrencyStamp", s."DisplayName", s."Email", s."EmailConfirmed", s."ImageUrl", s."LockoutEnabled", s."LockoutEnd", s."NormalizedEmail", s."NormalizedUserName", s."PasswordHash", s."PhoneNumber", s."PhoneNumberConfirmed", s."SecurityStamp", s."TwoFactorEnabled", s."UserName"
+      FROM (
+          SELECT a."Id", a."Category", a."City", a."Date", a."Description", a."IsCancelled", a."Latitude", a."Longitude", a."Title", a."Venue"
+          FROM "Activities" AS a
+          WHERE a."Id" = @__id_0
+          LIMIT 1
+      ) AS a2
+      LEFT JOIN (
+          SELECT a0."ActivityId", a0."UserId", a0."DateJoined", a0."IsHost", a1."Id", a1."AccessFailedCount", a1."Bio", a1."ConcurrencyStamp", a1."DisplayName", a1."Email", a1."EmailConfirmed", a1."ImageUrl", a1."LockoutEnabled", a1."LockoutEnd", a1."NormalizedEmail", a1."NormalizedUserName", a1."PasswordHash", a1."PhoneNumber", a1."PhoneNumberConfirmed", a1."SecurityStamp", a1."TwoFactorEnabled", a1."UserName"
+          FROM "ActivityAttendees" AS a0
+          INNER JOIN "AspNetUsers" AS a1 ON a0."UserId" = a1."Id"
+      ) AS s ON a2."Id" = s."ActivityId"
+      ORDER BY a2."Id", s."ActivityId", s."UserId"
+      ....
+
+
+这个多对多的关系:
+Activity (1)
+  └── ActivityAttendee (N)
+        └── User (1)
+SQL 实际返回的“虚拟大表”长什么样？
+
+假设：
+活动 A
+有 3 个参与者（AA1 / AA2 / AA3）
+对应 3 个 User（U1 / U2 / U3）
+
+SQL 返回结果（逻辑上）:
+行1: Activity字段 + Attendee(AA1)字段 + User(U1)字段
+行2: Activity字段 + Attendee(AA2)字段 + User(U2)字段
+行3: Activity字段 + Attendee(AA3)字段 + User(U3)字段
+注意：Activity 的字段在每一行都会重复, 是3行, 前面相同的这个活动的属性就是会弄成3行
+
+第二步:那 EF Core 怎么还原成对象的？
+EF Core 在内存里做反向组装：
+
+看 ActivityId
+相同 → 只 new 一个 Activity
+看 ActivityAttendee
+不同 → new 多个 Attendee
+每个 Attendee 绑定一个 User
+
+最终结果是;
+Activity
+{
+    Attendees = [
+        { User = U1 },
+        { User = U2 },
+        { User = U3 }
+    ]
+}
+
+那就出现问题了, include是可以将关联表的属性都拿过来了,include 是可以将关联表的属性都拿过来了
+✔️ 对，而且是“全部映射列”
+但是你看看上面的很多select语句/ 这个虚拟大表的很多属性都 不是必要的呢
+那都拿过来 实际上是暂时在内存中的, 那不就是占用了内存了吗
+然后再对这个虚拟大表 进行增删改查的操作(指的是映射 / 组装 / 去重，不是 DB 层 CRUD)--都是在内存中处理
+
+最后返回前端
+
+## 怎么解决这个问题? --用投影select--那就是明确选择某些需要的列, 而不是使用默认的 将所有的列都拿到这张虚拟大表中
+1. 现在的Include
+context.Activities
+    .Include(a => a.Attendees)
+    .ThenInclude(aa => aa.User)
+结果：
+查 Activity 全列
+查 ActivityAttendee 全列
+查 User 全列（含 PasswordHash）
+生成虚拟大表
+内存组装对象
+
+✔️ 功能对
+❌ 性能差
+❌ 内存占用大
+
+2. 用select--就是最本质的, 我就找出来我要的某些列 -然后弄到这个虚拟大表中
+```c#
+context.Activities
+    .Where(a => a.Id == id)
+    .Select(a => new ActivityDto
+    {
+        Id = a.Id,
+        Title = a.Title,
+        City = a.City,
+
+        Attendees = a.Attendees.Select(x => new UserProfileDto
+        {
+            Id = x.User.Id,
+            DisplayName = x.User.DisplayName,
+            ImageUrl = x.User.ImageUrl
+        }).ToList()
+    })
+
+```
+
+3. 但是一旦要找的列很多的话, 关联的表也是很多, 那一个个手写select选择, 那就很麻烦-
+就类似automapper一样,用配置, 不用手写创建对象了
+那这个用什么解决呢ProjectTo<T>() ---注意使用这个的前提就是使用了autommapper
+```c#
+context.Activities
+    .Where(a => a.Id == id)
+    .ProjectTo<ActivityDto>(_mapper.ConfigurationProvider)
+
+```
+
+本质：
+AutoMapper 把你的映射规则翻译成 SQL SELECT
+效果 ≈ 手写 Select
+但调试难度更高
+
+
+3.1 ProjectTo<T>()使用前的配置
+不把整张表拉进内存，只在 SQL 层 SELECT 你需要的字段。
+
+✔️ 但前提条件只有一个：
+你必须已经用 AutoMapper 定义好「Entity → DTO」的映射
+
+3.2 ProjectTo<T>() 到底干了什么？
+1) 普通 Map（就是现在上面的用include的代码)
+var entity = await context.Activities
+    .Include(...)
+    .FirstAsync();
+
+var dto = mapper.Map<ActivityDto>(entity);
+
+流程是; 
+SQL（查全列 + JOIN）
+ → 内存实体
+   → AutoMapper Map（内存）
+
+问题：SQL 查太多列到虚拟大表中了
+
+2) ProjectTo<T>()干什么? 
+var dto = await context.Activities
+    .Where(a => a.Id == id)
+    .ProjectTo<ActivityDto>(mapper.ConfigurationProvider)
+    .FirstOrDefaultAsync();
+
+流程是：
+AutoMapper 映射规则
+ → 翻译成 SQL SELECT
+   → 数据库直接返回 DTO 形状
+
+
+4. 回到本质!!!!!!!!!!!!
+是替 程序员 省时 --不用一个个的select 列了--就这个一个---那我现在要问的是: mapper.ConfigurationProvider --到底配置的是什么-要配置什么-- 才能让这个知道是选择那些列的 ---也就是之前手写的那些select的列--现在是怎么配置的?
+
+ProjectTo<T>() 能“自动知道要 SELECT 哪些列”的前提，只有一个：
+👉 你在 AutoMapper 的 Mapping Profile 里，已经“声明过 DTO 需要哪些字段”。
+
+
+ProjectTo<T>() 的 T 是什么
+T = 目标类型（DTO）
+**它里面的属性就是你“想要从数据库选出来的列**
+
+AutoMapper 会根据 CreateMap<源, T> 规则自动生成 SQL，只 SELECT DTO 中的列!!!!!!!!!!
+
+
+
+CreateMap<Activity, ActivityDto>()
+    .ForMember(dest => dest.Attendees,
+        opt => opt.MapFrom(src => src.Attendees.Select(aa => aa.User)))
+
+DTO 的属性就是最终 SQL SELECT 的列,不需要手写每一列, 这个其实就是之前的 为了不手写创建对象的配置
+这个规则 同时适用于 mapper.Map 和 ProjectTo<T>()
+
+所以ProjectTo<T>()不需要额外再配置
+
+
+###  
+后者好,
+.Where(a => a.Id == id) 会先在数据库层筛选，再映射为 DTO!!!!!!!!
+先用这个还没执行 SQL，只是“构建查询表达式树”,只是给查询表达式加一个条件,数据仍然在数据库里，还没拉到内存
+.Where(...) 在数据库里先筛选
+.ProjectTo<T>() 再只选你需要的列
+.ToListAsync() 或 .FirstOrDefaultAsync() 才把最终结果拉到内存
+最小内存占用 + 最少不必要的列
+
+前者ActivityDto 已经是 DTO，里面可能没有 Id 字段对应原表的主键

@@ -4,6 +4,7 @@ using API.core.Dtos;
 using API.core.Dtos.Activity;
 using API.core.Entities;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,26 +20,46 @@ namespace API.Controllers
     {
 
         [HttpGet]
-        public async Task<ActionResult<List<ResponseActivityDto<Activity>>>> GetActivities()
+        public async Task<ActionResult<List<ResponseActivityDto<ActivityDto>>>> GetActivities()
         {
-            var activities = await context.Activities.ToListAsync();
+
+            // var activities = await context.Activities
+            //     .Include(a => a.Attendees)
+            //     .ThenInclude(aa => aa.User)
+            //     .ToListAsync();
+            // change to use ProjectTo for AutoMapper optimization, avoid loading unnecessary data
+            var activities = await context.Activities.ProjectTo<ActivityDto>(mapper.ConfigurationProvider).ToListAsync();
             if (activities == null || activities.Count == 0)
             {
-                return Ok(new ResponseActivityDto<List<Activity>> { IsSuccess = true, Message = "No activities found", Data = activities });
+                return Ok(new ResponseActivityDto<List<ActivityDto>> { IsSuccess = true, Message = "No activities found", Data = new List<ActivityDto>() });
             }
-            return Ok(new ResponseActivityDto<List<Activity>> { IsSuccess = true, Message = "Success", Data = activities });
+
+            var activitiesDto = mapper.Map<List<ActivityDto>>(activities);
+
+            return Ok(new ResponseActivityDto<List<ActivityDto>> { IsSuccess = true, Message = "Success", Data = activitiesDto });
         }
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ResponseActivityDto<Activity>>> GetActivityById([FromRoute] string id)
+        public async Task<ActionResult<ResponseActivityDto<ActivityDto>>> GetActivityById([FromRoute] string id)
         {
-            // var activites = await context.Activities.Include(a => a.Attendees).Where(a => a.Id == id).ToListAsync();
-            var activity = await context.Activities.FindAsync(id);
-            // if (activity == null) return NotFound();
+            // var activity = await context.Activities
+            //     .Include(a => a.Attendees)
+            //     .ThenInclude(aa => aa.User)
+            //     .FirstOrDefaultAsync(a => a.Id == id);
+            // change to use ProjectTo for AutoMapper optimization, avoid loading unnecessary data
+            var activity = await context.Activities
+                .Where(a => a.Id == id)
+                .ProjectTo<ActivityDto>(mapper.ConfigurationProvider)
+               .FirstOrDefaultAsync();
 
-            // return Ok(activites);
-            return Ok(new ResponseActivityDto<Activity> { IsSuccess = true, Message = "Success", Data = activity });
+            if (activity == null)
+            {
+                return NotFound(new ResponseActivityDto<ActivityDto> { IsSuccess = false, Message = "Activity not found" });
+            }
+            var activityDto = mapper.Map<ActivityDto>(activity);
+
+            return Ok(new ResponseActivityDto<ActivityDto> { IsSuccess = true, Message = "Success", Data = activityDto });
         }
 
 
@@ -83,16 +104,19 @@ namespace API.Controllers
             return Ok(new ResponseActivityDto<object> { IsSuccess = true, Message = "Updated successfully" });
         }
 
+
         [HttpDelete("{id}")]
         public async Task<ActionResult<ResponseActivityDto<object>>> DeleteActivity(string id)
         {
             var activity = await context.Activities.FindAsync(id); // 必须先从数据库中取出实体对象
-            if (activity == null) return NotFound();
+            if (activity == null) return NotFound(new ResponseActivityDto<object> { IsSuccess = false, Message = "Activity not found" });
 
             context.Activities.Remove(activity);
             await context.SaveChangesAsync();
             return Ok(new ResponseActivityDto<object> { IsSuccess = true, Message = "Deleted successfully" });
         }
+
+
 
 
     }
