@@ -1,3 +1,4 @@
+using System.Reflection.Metadata;
 using System.Security.Claims;
 using API.core.AppDbContext;
 using API.core.Dtos;
@@ -20,7 +21,7 @@ namespace API.Controllers
     {
 
         [HttpGet]
-        public async Task<ActionResult<List<ResponseActivityDto<ActivityDto>>>> GetActivities()
+        public async Task<ActionResult<List<ActivityDto>>> GetActivities()
         {
 
             // var activities = await context.Activities
@@ -29,19 +30,15 @@ namespace API.Controllers
             //     .ToListAsync();
             // change to use ProjectTo for AutoMapper optimization, avoid loading unnecessary data
             var activities = await context.Activities.ProjectTo<ActivityDto>(mapper.ConfigurationProvider).ToListAsync();
-            if (activities == null || activities.Count == 0)
-            {
-                return Ok(new ResponseActivityDto<List<ActivityDto>> { IsSuccess = true, Message = "No activities found", Data = new List<ActivityDto>() });
-            }
 
             var activitiesDto = mapper.Map<List<ActivityDto>>(activities);
 
-            return Ok(new ResponseActivityDto<List<ActivityDto>> { IsSuccess = true, Message = "Success", Data = activitiesDto });
+            return Ok(activitiesDto);
         }
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ResponseActivityDto<ActivityDto>>> GetActivityById([FromRoute] string id)
+        public async Task<ActionResult<ActivityDto>> GetActivityById([FromRoute] string id)
         {
             // var activity = await context.Activities
             //     .Include(a => a.Attendees)
@@ -55,16 +52,15 @@ namespace API.Controllers
 
             if (activity == null)
             {
-                return NotFound(new ResponseActivityDto<ActivityDto> { IsSuccess = false, Message = "Activity not found" });
+                return NotFound(new { Message = "Activity not found" });
             }
             var activityDto = mapper.Map<ActivityDto>(activity);
-
-            return Ok(new ResponseActivityDto<ActivityDto> { IsSuccess = true, Message = "Success", Data = activityDto });
+            return Ok(activityDto);
         }
 
 
         [HttpPost]
-        public async Task<ActionResult<ResponseActivityDto<object>>> CreateActivity(CreateActivityDto dto)
+        public async Task<ActionResult> CreateActivity(CreateActivityDto dto)
         {
             var activity = mapper.Map<Activity>(dto);
             // 此时并没有调用数据库, 实际上是在内存中创建了一个实体对象,所以并不需要用AddAsync异步方法!!!!
@@ -76,7 +72,7 @@ namespace API.Controllers
             Console.WriteLine("Current UserId: " + userId);
             if (userId == null)
             {
-                return Unauthorized(new ResponseActivityDto<object> { IsSuccess = false, Message = "User not authenticated" });
+                return Unauthorized(new { Message = "User not authenticated" });
             }
 
             // 2. 创建ActivityAttendee实体对象,并设置IsHost为true
@@ -89,31 +85,43 @@ namespace API.Controllers
             // 3. 将ActivityAttendee对象添加到数据库上下文中
             activity.Attendees.Add(attendee);
             await context.SaveChangesAsync();
-            return Ok(new ResponseActivityDto<object> { IsSuccess = true, Message = "Created successfully" });
+            return Ok(new { Message = "Created successfully" });
         }
 
-
+        // only the host can update or delete the activity
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateActivity(string id, CreateActivityDto dto)
         {
             var activity = await context.Activities.FindAsync(id); // 必须先从数据库中取出实体对象
-            if (activity == null) return NotFound(new ResponseActivityDto<object> { IsSuccess = false, Message = "Activity not found" });
+            if (activity == null) return NotFound(new { Message = "Activity not found" });
+
+            // 1. 获取当前登录用户的UserId
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // 2. 获取活动的主办方UserId
+            var hostId = await context.ActivityAttendees.Where(aa => aa.ActivityId == id)
+               .Select(aa => aa.UserId)
+               .FirstOrDefaultAsync();
+            if (hostId != userId)
+            {
+                return Forbid(); // 403 Forbidden
+            }
 
             mapper.Map(dto, activity);     // 将dto的值映射到已经存在的实体对象上,更新现有的实体对象的属性值!!!!!
             await context.SaveChangesAsync();
-            return Ok(new ResponseActivityDto<object> { IsSuccess = true, Message = "Updated successfully" });
+            return Ok(new { Message = "Updated successfully" });
         }
 
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult<ResponseActivityDto<object>>> DeleteActivity(string id)
+        public async Task<IActionResult> DeleteActivity(string id)
         {
             var activity = await context.Activities.FindAsync(id); // 必须先从数据库中取出实体对象
-            if (activity == null) return NotFound(new ResponseActivityDto<object> { IsSuccess = false, Message = "Activity not found" });
+            if (activity == null) return NotFound(new { Message = "Activity not found" });
 
             context.Activities.Remove(activity);
             await context.SaveChangesAsync();
-            return Ok(new ResponseActivityDto<object> { IsSuccess = true, Message = "Deleted successfully" });
+            return Ok(new { Message = "Deleted successfully" });
         }
 
 
