@@ -1,11 +1,44 @@
 import { Card, Badge, CardMedia, Box, Typography, Button } from "@mui/material";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
+import {
+  attendActivity,
+  toggleActivityCancellation,
+  unattendActivity,
+} from "../http";
+import toast from "react-hot-toast";
+import { useState } from "react";
 
 export default function ActivityDetailsHeader({ activity }) {
-  const isCancelled = activity.isCancelled;
+  const [isCancelled, setIsCancelled] = useState(activity.isCancelled);
+  const [isAttending, setIsAttending] = useState(activity.isAttending);
   const isHost = activity.isHost;
-  const isAttending = activity.isAttending;
+
+  const handleToggleCancellation = async () => {
+    if (!isHost) return;
+    try {
+      if (isHost) {
+        await toggleActivityCancellation(activity.id);
+        setIsCancelled(!isCancelled);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleAttendance = async () => {
+    if (isHost) return;
+    try {
+      if (isAttending) {
+        await unattendActivity(activity.id);
+      } else {
+        await attendActivity(activity.id);
+      }
+      setIsAttending(!isAttending);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   return (
     <Card
@@ -73,7 +106,7 @@ export default function ActivityDetailsHeader({ activity }) {
                 variant="contained"
                 color={isCancelled ? "success" : "error"}
                 sx={{ borderRadius: 2 }}
-                onClick={() => {}}
+                onClick={handleToggleCancellation}
               >
                 {isCancelled ? "Re-activate Activity" : "Cancel Activity"}
               </Button>
@@ -92,7 +125,7 @@ export default function ActivityDetailsHeader({ activity }) {
             <Button
               variant="contained"
               color={isAttending ? "primary" : "info"}
-              onClick={() => {}}
+              onClick={handleAttendance}
               disabled={isCancelled}
             >
               {isAttending ? "Cancel Attendance" : "Join Activity"}

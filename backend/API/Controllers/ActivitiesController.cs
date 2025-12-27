@@ -132,8 +132,7 @@ namespace API.Controllers
         }
 
 
-        // host cancel or re-activate the activity
-        [HttpPost("{id}/toggle-cancel")]
+         
         public async Task<IActionResult> CancelOrReactivateActivity(string id)
         {
             // 1. check if activity exists
@@ -188,11 +187,11 @@ namespace API.Controllers
             };
             context.ActivityAttendees.Add(attendance);
             await context.SaveChangesAsync();
-            return Ok();
+            return Ok(new { Message = "Joined activity successfully" });
         }
 
         // non-host user cancel attendance
-        [HttpPost("{id}/unattend")]
+        [HttpDelete("{id}/unattend")]
         public async Task<IActionResult> UnattendActivity(string id)
         {
             // 1. check if activity exists

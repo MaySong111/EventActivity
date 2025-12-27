@@ -96,6 +96,45 @@ export async function deleteActivity(id) {
   return await result.json();
 }
 
+export async function attendActivity(id) {
+  var response = await fetch(`${BASE_URL}/activities/${id}/attend`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const responseData = await response.json();
+    throw new Error(responseData.message || "Failed to join activity");
+  }
+  return true;
+}
+
+export async function unattendActivity(id) {
+  var response = await fetch(`${BASE_URL}/activities/${id}/unattend`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const responseData = await response.json();
+    throw new Error(responseData.message || "Failed to leave activity");
+  }
+  return true;
+}
+
+export async function toggleActivityCancellation(id) {
+  var response = await fetch(`${BASE_URL}/activities/${id}/toggle-cancel`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+
+  console.log("toggleActivityCancellation response:", response);
+
+  if (!response.ok) {
+    const responseData = await response.json();
+    throw new Error(responseData.message || "Failed to toggle cancellation");
+  }
+  return true;
+}
+
 // Authentication APIs--------------------------------
 export async function loginUser(data) {
   var response = await fetch(`${BASE_URL}/auth/login`, {
