@@ -17,6 +17,7 @@ namespace API.Controllers
         {
             // 1. check if user with the same email exists
             var existingUser = await userManager.FindByEmailAsync(dto.Email);
+
             // email 已存在则返回409 Conflict,而不是400 Bad Request(400是参数格式错误等)
             if (existingUser != null)
             {
@@ -35,9 +36,9 @@ namespace API.Controllers
             var result = await userManager.CreateAsync(newUser, dto.Password);
             if (!result.Succeeded)
             {
-                return BadRequest(new { Message = "User registration failed.", Errors = result.Errors });
+                return BadRequest(new { Message = "Registration failed.", Errors = result.Errors });
             }
-            return Created("", new { Message = "User registered successfully." });
+            return Created("", new { Message = "Registered successfully." });
         }
 
 

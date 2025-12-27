@@ -14,6 +14,7 @@ import {
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { useState } from "react";
 import useStore from "../../store/useAuthStore";
+import toast from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -43,11 +44,22 @@ export default function Login() {
       login(userInfo, token);
       navigate("/activities");
     },
+    onError: (error) => {
+      if (error.message === "Login failed") {
+        toast.error("Invalid email or password");
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
+    },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (!formData.email || !formData.password) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
     loginMutation.mutate({
       email: formData.email,
       password: formData.password,

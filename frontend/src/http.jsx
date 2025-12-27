@@ -16,17 +16,18 @@ export async function getActivities() {
   var result = await fetch(`${BASE_URL}/activities`, {
     headers: getAuthHeaders(),
   });
-  if (result.status === 401) {
-    // if token is expired or invalid, clear it and redirect to login page
-    useAuthStore.getState().logout();
-    window.location.href = "/login";
+  if (!result.ok) {
+    if (result.status === 401) {
+      throw new Error("AUTH/TOKEN_EXPIRED");
+    }
+    throw new Error("Failed to fetch activities");
   }
 
   const data = await result.json();
   console.log("getActivities fetched data:", data);
   const currentUser = useAuthStore.getState().user;
 
-  // 给每个活动加上 isHost 和 isGoing
+  // 给每个活动加上 isHost 和 isAttending 标志
   const activitiesWithFlags = await data.map((activity) => ({
     ...activity,
     isHost: activity.hostId === currentUser?.id,
@@ -47,11 +48,13 @@ export async function getActivity(id) {
   console.log("getActivity fetched data:", data);
   const currentUser = useAuthStore.getState().user;
 
-  // 给活动加上 isHost 和 isGoing 标志
+  // 给活动加上 isHost 和 isAttending 标志
   const activityWithFlags = {
     ...data,
     isHost: data.hostId === currentUser?.id,
-    isAttending: data.attendees.some((attendee) => attendee.id === currentUser?.id),
+    isAttending: data.attendees.some(
+      (attendee) => attendee.id === currentUser?.id
+    ),
   };
   return activityWithFlags;
 }
@@ -100,16 +103,15 @@ export async function loginUser(data) {
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  if (!response.ok) {
-    throw new Error("Login failed");
-  }
 
-  if (response.status === 401) {
-    // if token is expired or invalid,clear it and redirect to login page
-    useAuthStore.getState().logout();
-    window.location.href = "/login";
+  const responseData = await response.json();
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Invalid email or password");
+    }
+    throw new Error(responseData.message || "Login failed");
   }
-  return response.json();
+  return responseData;
 }
 
 export async function registerUser(data) {
@@ -120,8 +122,10 @@ export async function registerUser(data) {
     },
     body: JSON.stringify(data),
   });
+
+  const responseData = await response.json();
   if (!response.ok) {
-    throw new Error("Registration failed");
+    throw new Error(responseData.message || "Registration failed");
   }
-  return response.json();
+  return responseData;
 }

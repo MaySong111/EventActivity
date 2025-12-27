@@ -12,9 +12,11 @@ import {
 } from "@mui/material";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import toast from "react-hot-toast";
+import { useState } from "react";
 
 export default function Register() {
   const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
 
   // 注册 mutation
   const registerMutation = useMutation({
@@ -25,11 +27,41 @@ export default function Register() {
       toast.success("Registration successful! Please log in.");
       navigate("/login");
     },
+    onError: (error) => {
+      if (error.message.includes("Email is already in use")) {
+        setErrors("Email is already in use");
+        toast.error("Email is already in use. Please use a different email.");
+      } else {
+        setErrors("Registration failed");
+        toast.error("Registration failed. Please try again.");
+      }
+    },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setErrors({});
+
     const formData = new FormData(e.target);
+    const email = formData.get("email");
+    const displayName = formData.get("displayName");
+    const password = formData.get("password");
+
+    // 前端验证
+    const newErrors = {};
+    if (!email) newErrors.email = "Email is required";
+    if (!displayName) newErrors.displayName = "Display name is required";
+    if (!password) newErrors.password = "Password is required";
+
+    if (password && password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // 前端验证通过，调用注册 mutation
     registerMutation.mutate({
       email: formData.get("email"),
       displayName: formData.get("displayName"), // 注意字段名
@@ -72,6 +104,8 @@ export default function Register() {
             label="Email"
             autoComplete="email"
             autoFocus
+            error={!!errors.email}
+            helperText={errors.email}
           />
           {/* Display name 字段 */}
           <TextField
@@ -80,6 +114,8 @@ export default function Register() {
             name="displayName"
             label="Display name"
             autoComplete="username"
+            error={!!errors.displayName}
+            helperText={errors.displayName}
           />
           {/* Password 字段 */}
           <TextField
@@ -89,6 +125,8 @@ export default function Register() {
             label="Password"
             type="password"
             autoComplete="new-password"
+            error={!!errors.password}
+            helperText={errors.password}
           />
 
           <Button

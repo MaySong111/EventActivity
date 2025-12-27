@@ -74,7 +74,7 @@ export default function ActivityCard({ activity }) {
           }
         />
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", pr: 2 }}>
           {(isHost || isAttending) && (
             <Chip label={label} color={color} sx={{ borderRadius: 2 }} />
           )}
