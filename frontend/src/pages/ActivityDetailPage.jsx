@@ -36,7 +36,7 @@ export default function ActivityDetailPage() {
 
           {/* sidebar */}
           <Grid2 size={4}>
-            <ActivityDetailsSidebar />
+            <ActivityDetailsSidebar activity={activity} />
           </Grid2>
         </Grid2>
       </Box>

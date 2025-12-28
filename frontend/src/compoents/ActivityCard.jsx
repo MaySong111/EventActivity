@@ -9,17 +9,22 @@ import {
   CardHeader,
   Avatar,
   Divider,
+  Tooltip,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { deleteActivity } from "../http";
+import useAuthStore from "../store/useAuthStore";
 
 export default function ActivityCard({ activity }) {
-  // console.log("ActivityCard activity:", activity);
-  console.log("ActivityCard activity id:", activity.id);
-  const { isHost, isAttending } = activity;
+  // console.log("ActivityCard activity:", activity)
+  // 实时计算 isHost 和 isAttending
+  const currentUser = useAuthStore((state) => state.user);
+  const isHost = currentUser?.id === activity.hostId;
+  const isAttending = activity.attendees.some((a) => a.id === currentUser?.id);
+  const isCancelled = activity.isCancelled;
 
   const label = isHost
     ? "You are hosting"
@@ -27,8 +32,7 @@ export default function ActivityCard({ activity }) {
     ? "You are attending"
     : null;
 
-  const isCancelled = activity.isCancelled;
-  const color = isHost ? "secondary" : isAttending ? "warning" : "default";
+  const color = isHost ? "primary.main" : "secondary.main";
 
   const queryClient = useQueryClient();
   const deleteActivityMutation = useMutation({
@@ -75,11 +79,27 @@ export default function ActivityCard({ activity }) {
         />
 
         <Box sx={{ display: "flex", alignItems: "center", pr: 2 }}>
-          {(isHost || isAttending) && (
-            <Chip label={label} color={color} sx={{ borderRadius: 2 }} />
+          {!isCancelled && (isHost || isAttending) && (
+            <Chip
+              label={label}
+              sx={{
+                borderRadius: 2,
+                bgcolor: "transparent",
+                border: "1px solid",
+                borderColor: color,
+                color: color,
+              }}
+            />
           )}
           {isCancelled && (
-            <Chip label="Cancelled" color="error" sx={{ borderRadius: 2 }} />
+            <Chip
+              label="Cancelled"
+              sx={{
+                borderRadius: 2,
+                bgcolor: "error.main",
+                color: "white",
+              }}
+            />
           )}
         </Box>
       </Box>
@@ -107,12 +127,13 @@ export default function ActivityCard({ activity }) {
           }}
         >
           {activity.attendees.map((attendee) => (
-            <Avatar
-              key={attendee.id}
-              src={attendee.image}
-              alt={attendee.displayName}
-              to={`/profiles/${attendee.displayName}`}
-            />
+            <Tooltip key={attendee.id} title={attendee.displayName}>
+              <Avatar
+                alt={attendee.displayName}
+                to={`/profiles/${attendee.displayName}`}
+                src={attendee.imageUrl}
+              />
+            </Tooltip>
           ))}
         </Box>
       </CardContent>

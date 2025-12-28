@@ -7,12 +7,15 @@ import {
   unattendActivity,
 } from "../http";
 import toast from "react-hot-toast";
+import useAuthStore from "../store/useAuthStore";
 import { useState } from "react";
 
 export default function ActivityDetailsHeader({ activity }) {
+  // 实时计算 isHost 和 isAttending
+  const currentUser = useAuthStore((state) => state.user);
+  const isHost = currentUser?.id === activity.hostId;
+  const [isAttending, setIsAttending] = useState(activity.attendees.some((a) => a.id === currentUser?.id));
   const [isCancelled, setIsCancelled] = useState(activity.isCancelled);
-  const [isAttending, setIsAttending] = useState(activity.isAttending);
-  const isHost = activity.isHost;
 
   const handleToggleCancellation = async () => {
     if (!isHost) return;

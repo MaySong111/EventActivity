@@ -42,7 +42,7 @@ export default function Login() {
       // console.log("Login successful:", result);
       const { token, userInfo } = result;
       login(userInfo, token);
-      navigate("/activities");
+      navigate("/");
     },
     onError: (error) => {
       if (error.message === "Login failed") {

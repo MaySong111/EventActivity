@@ -12,22 +12,23 @@ namespace API.core.AutomapperConfig
         public AutomapperConfig()
         {
             CreateMap<CreateActivityDto, Activity>();
-            
+
             CreateMap<ActivityAttendee, UserProfileDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.User.Id))
                 .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.User.DisplayName))
                 .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.User.Bio))
-                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.User.ImageUrl));
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.User.Photo.Url));
 
 
             CreateMap<User, UserProfileDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.DisplayName))
                 .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.Bio))
-                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl));
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Photo.Url));
 
             CreateMap<Activity, ActivityDto>()
-                .ForMember(dest => dest.Attendees, opt => opt.MapFrom(src => src.Attendees.Select(aa => aa.User)))
+                .ForMember(dest => dest.Attendees,
+                opt => opt.MapFrom(src => src.Attendees.OrderBy(aa => aa.DateJoined)))
                 .ForMember(dest => dest.HostDisplayName,
                  opt => opt.MapFrom(src => src.Attendees.FirstOrDefault(aa => aa.IsHost)!.User.DisplayName))
                 .ForMember(dest => dest.HostId,

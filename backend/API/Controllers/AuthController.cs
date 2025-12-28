@@ -31,7 +31,6 @@ namespace API.Controllers
                 Email = dto.Email,
                 DisplayName = dto.DisplayName
             };
-
             // 3. save user to database
             var result = await userManager.CreateAsync(newUser, dto.Password);
             if (!result.Succeeded)
@@ -74,11 +73,11 @@ namespace API.Controllers
                     {
                         Id = user.Id,
                         DisplayName = user.DisplayName,
-                        ImageUrl = user.ImageUrl ?? "/default-avatar.png" // Default image URL if ImageUrl is null
+                        ImageUrl = user.Photo?.Url ?? "/default-avatar.png" // Default image URL if ImageUrl is null
                     }
                 });
             }
-
         }
+
     }
 }

@@ -3,6 +3,7 @@ using System;
 using API.core.AppDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251228061331_RemovePhotoId1FromAspNetUsers")]
+    partial class RemovePhotoId1FromAspNetUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -160,8 +163,7 @@ namespace API.Migrations
                     b.Property<string>("PhotoId")
                         .HasColumnType("text");
 
-                    b.Property<string>("PhotoId1")
-                        .HasColumnType("text");
+                    
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
@@ -182,7 +184,7 @@ namespace API.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
 
-                    b.HasIndex("PhotoId1");
+                   
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -338,14 +340,7 @@ namespace API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("API.core.Entities.User", b =>
-                {
-                    b.HasOne("API.core.Entities.Photo", "Photo")
-                        .WithMany()
-                        .HasForeignKey("PhotoId1");
-
-                    b.Navigation("Photo");
-                });
+            
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {

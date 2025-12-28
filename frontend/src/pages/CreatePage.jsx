@@ -128,7 +128,7 @@ export default function CreatePage() {
 
   // part2: 编辑功能的实现---2.2把获取到的activity数据填充到表单中---编辑模式下填充form
   useEffect(() => {
-    if (activity) {
+    if (activity && isEditMode) {
       setForm({
         title: activity.title || "",
         description: activity.description || "",
@@ -141,15 +141,7 @@ export default function CreatePage() {
         latitude: activity.latitude || "",
         longitude: activity.longitude || "",
       });
-    }
-  }, [activity]);
-
-  // 出现问题: 但点击view-进入这个页面(编辑模式下),再点击 "Create Activity" 后，会看到表单还有数据, 但是应该是空的
-  // 从编辑页 /manage/123 → 点击导航栏 "CREATE ACTIVITY" → 跳转到 /create-activity ---组件复用了！（同一个 CreatePage 组件）----form 状态保留了！
-  // ✅ 监听 id 变化，如果从编辑模式切换到创建模式，重置表单
-  // 方法2: 另一个解决办法就是卸载--在定义路由的时候加一个 key 属性, 让 React 认为是不同的组件---但是这种方法不够优雅!!!!!!!!!!!
-  useEffect(() => {
-    if (!isEditMode) {
+    } else if (!isEditMode) {
       // 创建模式：重置表单
       setForm({
         title: "",
@@ -162,7 +154,13 @@ export default function CreatePage() {
         longitude: "",
       });
     }
-  }, [isEditMode]);
+  }, [activity, isEditMode]);
+
+  // 出现问题: 但点击view-进入这个页面(编辑模式下),再点击 "Create Activity" 后，会看到表单还有数据, 但是应该是空的
+  // 从编辑页 /manage/123 → 点击导航栏 "CREATE ACTIVITY" → 跳转到 /create-activity ---组件复用了！（同一个 CreatePage 组件）----form 状态保留了！
+  // ✅ 监听 id 变化，如果从编辑模式切换到创建模式，重置表单
+  // 方法2: 另一个解决办法就是卸载--在定义路由的时候加一个 key 属性, 让 React 认为是不同的组件---但是这种方法不够优雅!!!!!!!!!!!
+  // 就是上面的 useEffect 监听 isEditMode 变化, 重置表单!!!!!!!!!!!!!
 
   // part2: 编辑功能的实现---2.3定义 updateMutation函数---发put请求更新一个 activity
   const updateActivityMutation = useMutation({

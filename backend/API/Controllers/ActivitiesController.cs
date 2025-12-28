@@ -132,7 +132,7 @@ namespace API.Controllers
         }
 
 
-         
+        [HttpPost("{id}/toggle-cancel")]
         public async Task<IActionResult> CancelOrReactivateActivity(string id)
         {
             // 1. check if activity exists

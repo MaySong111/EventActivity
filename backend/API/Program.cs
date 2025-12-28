@@ -44,6 +44,7 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 
 builder.Services.AddAutoMapper(typeof(AutomapperConfig));
 builder.Services.AddScoped<JwtTokenCreator>();
+builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 

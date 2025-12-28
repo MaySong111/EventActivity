@@ -22,7 +22,7 @@ const pages = [
 export default function Navbar() {
   const [showMenu, setShowMenu] = useState(false);
   const token = useAuthStore((state) => state.token);
-  const user = useAuthStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const isLoginedIn = !!token;
 
@@ -57,15 +57,15 @@ export default function Navbar() {
             onMouseLeave={() => setShowMenu(false)}
           >
             {/*  username */}
-            <Typography>{user.displayName}</Typography>
+            <Typography>{currentUser.displayName}</Typography>
             {/* user avatar */}
             <Avatar
               src={
-                user.imageUrl
-                  ? `https://localhost:5001${user.imageUrl}`
+                currentUser.imgUrl
+                  ? `https://localhost:5001${currentUser.imgUrl}`
                   : "/default-avatar.png"
               }
-              alt={user?.displayName}
+              alt={currentUser?.displayName}
               sx={{ cursor: "pointer" }}
             />
 
@@ -86,7 +86,7 @@ export default function Navbar() {
               >
                 <Button
                   component={Link}
-                  to={`/profiles/${user.displayName}`}
+                  to={`/profiles/${currentUser.displayName}`}
                   sx={{
                     justifyContent: "flex-start",
                     width: "100%",

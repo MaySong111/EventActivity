@@ -6,7 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace API.core.Services;
 
-public class JwtTokenCreator(UserManager<User> userManager, IConfiguration configuration)
+public class JwtTokenCreator(UserManager<User> userManager, IConfiguration config)
 {
     public async Task<string> GenerateToken(User user, bool rememberMe)
     {
@@ -20,13 +20,13 @@ public class JwtTokenCreator(UserManager<User> userManager, IConfiguration confi
         };
 
         // step2: create signing credentials
-        var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
+        var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(config["Jwt:Key"]));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var tokenExpiry = rememberMe ? DateTime.Now.AddDays(7) : DateTime.Now.AddHours(2);
         // step3: create the token
         var token = new JwtSecurityToken(
-            issuer: configuration["Jwt:Issuer"],
-            audience: configuration["Jwt:Audience"],
+            issuer: config["Jwt:Issuer"],
+            audience: config["Jwt:Audience"],
             claims: claims,
             expires: tokenExpiry,
             signingCredentials: creds

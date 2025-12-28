@@ -24,39 +24,15 @@ export async function getActivities() {
   }
 
   const data = await result.json();
-  console.log("getActivities fetched data:", data);
-  const currentUser = useAuthStore.getState().user;
-
-  // 给每个活动加上 isHost 和 isAttending 标志
-  const activitiesWithFlags = await data.map((activity) => ({
-    ...activity,
-    isHost: activity.hostId === currentUser?.id,
-    isAttending: activity.attendees.some(
-      (attendee) => attendee.id === currentUser?.id
-    ),
-  }));
-
-  return activitiesWithFlags;
+  return data;
 }
 
 export async function getActivity(id) {
   var result = await fetch(`${BASE_URL}/activities/${id}`, {
     headers: getAuthHeaders(),
   });
-
   const data = await result.json();
-  console.log("getActivity fetched data:", data);
-  const currentUser = useAuthStore.getState().user;
-
-  // 给活动加上 isHost 和 isAttending 标志
-  const activityWithFlags = {
-    ...data,
-    isHost: data.hostId === currentUser?.id,
-    isAttending: data.attendees.some(
-      (attendee) => attendee.id === currentUser?.id
-    ),
-  };
-  return activityWithFlags;
+  return data;
 }
 
 export async function createActivity(activity) {
@@ -167,4 +143,28 @@ export async function registerUser(data) {
     throw new Error(responseData.message || "Registration failed");
   }
   return responseData;
+}
+
+// Profile APIs--------------------------------
+export async function uploadProfilePhoto(file) {
+  const token = useAuthStore.getState().token;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${BASE_URL}/profiles/upload-photo`, {
+    method: "POST",
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const responseData = await response.json();
+    throw new Error(responseData.message || "Photo upload failed");
+  }
+
+  const data = await response.json();
+  return data; // 返回图片的 URL
 }

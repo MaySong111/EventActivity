@@ -8,7 +8,8 @@ namespace API.core.AppDbContext
     {
         public DbSet<Activity> Activities { get; set; }
         public DbSet<ActivityAttendee> ActivityAttendees { get; set; }
-        
+        public DbSet<Photo> Photos { get; set; }
+
         override protected void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
