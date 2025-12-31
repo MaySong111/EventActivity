@@ -35,9 +35,9 @@ namespace API.Controllers
             var result = await userManager.CreateAsync(newUser, dto.Password);
             if (!result.Succeeded)
             {
-                return BadRequest(new { Message = "Registration failed.", Errors = result.Errors });
+                return BadRequest(new { Message = "Registration failed." });
             }
-            return Created("", new { Message = "Registered successfully." });
+            return Ok(new { Message = "Registered successfully. Please log in." });
         }
 
 
@@ -49,14 +49,14 @@ namespace API.Controllers
             // 邮箱不存在 = 身份验证失败并不是找不到用户(所以不是NotFound),而是Unauthorized401
             if (user == null)
             {
-                return Unauthorized();
+                return BadRequest(new { Message = "Email does not exist." });
             }
             // 2. check password
             var passwordValid = await userManager.CheckPasswordAsync(user, dto.Password);
             // 密码错误 = 身份验证失败401 Unauthorized
             if (!passwordValid)
             {
-                return Unauthorized();
+                return BadRequest(new { Message = "Incorrect password." });
             }
             else
             {

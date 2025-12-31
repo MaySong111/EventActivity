@@ -23,6 +23,7 @@ export default function Login() {
     password: "",
     rememberMe: false,
   });
+  const [errors, setErrors] = useState({});
 
   const login = useStore((state) => state.login);
 
@@ -55,11 +56,30 @@ export default function Login() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setErrors({});
 
-    if (!formData.email || !formData.password) {
-      toast.error("Please fill in all required fields");
+    // frontend validation
+    const newErrors = {};
+    const { email, password } = formData;
+    if (!email) newErrors.email = "Email is required";
+    if (email && !/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Invalid email format";
+    }
+    if (!password) newErrors.password = "Password is required";
+
+    if (password && password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    if (password.toLowerCase() === password) {
+      newErrors.password =
+        "Password must contain at least one uppercase letter";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
     loginMutation.mutate({
       email: formData.email,
       password: formData.password,
@@ -103,6 +123,8 @@ export default function Login() {
             autoFocus
             value={formData.email}
             onChange={handleChange}
+            error={!!errors.email}
+            helperText={errors.email}
           />
           <TextField
             fullWidth
@@ -113,6 +135,8 @@ export default function Login() {
             autoComplete="current-password"
             value={formData.password}
             onChange={handleChange}
+            error={!!errors.password}
+            helperText={errors.password}
           />
           <FormControlLabel
             control={

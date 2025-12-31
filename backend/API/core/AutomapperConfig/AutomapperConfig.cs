@@ -1,6 +1,7 @@
 
 using API.core.Dtos;
 using API.core.Dtos.Activity;
+using API.core.Dtos.Comment;
 using API.core.Dtos.Profile;
 using API.core.Entities;
 using AutoMapper;
@@ -33,6 +34,8 @@ namespace API.core.AutomapperConfig
                  opt => opt.MapFrom(src => src.Attendees.FirstOrDefault(aa => aa.IsHost)!.User.DisplayName))
                 .ForMember(dest => dest.HostId,
                 opt => opt.MapFrom(src => src.Attendees.FirstOrDefault(aa => aa.IsHost)!.User.Id));
+
+            CreateMap<Comment, CommentDto>();
         }
     }
 }

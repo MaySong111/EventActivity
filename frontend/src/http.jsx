@@ -13,25 +13,34 @@ function getAuthHeaders() {
 }
 
 export async function getActivities() {
-  var result = await fetch(`${BASE_URL}/activities`, {
+  var response = await fetch(`${BASE_URL}/activities`, {
     headers: getAuthHeaders(),
   });
-  if (!result.ok) {
-    if (result.status === 401) {
-      throw new Error("AUTH/TOKEN_EXPIRED");
-    }
-    throw new Error("Failed to fetch activities");
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
   }
 
-  const data = await result.json();
+  const data = await response.json();
   return data;
 }
 
 export async function getActivity(id) {
-  var result = await fetch(`${BASE_URL}/activities/${id}`, {
+  var response = await fetch(`${BASE_URL}/activities/${id}`, {
     headers: getAuthHeaders(),
   });
-  const data = await result.json();
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to fetch activity");
+  }
+  const data = await response.json();
   return data;
 }
 
@@ -43,33 +52,45 @@ export async function createActivity(activity) {
   });
 
   if (response.status === 401) {
-    const error = new Error("Unauthorized");
-    error.status = 401;
-    throw error;
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
   }
+
   return response.json();
 }
 
 export async function updateActivity(id, activity) {
   console.log("Updating: activity object no id", activity);
-  var result = await fetch(`${BASE_URL}/activities/${id}`, {
+  var response = await fetch(`${BASE_URL}/activities/${id}`, {
     method: "PUT",
     headers: getAuthHeaders(),
     body: JSON.stringify(activity),
   });
-  if (result.status === 403) {
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
+
+  if (response.status === 403) {
     throw new Error("Forbidden: You are not the host of this activity");
   }
 
-  return await result.json();
+  return await response.json();
 }
 
 export async function deleteActivity(id) {
-  var result = await fetch(`${BASE_URL}/activities/${id}`, {
+  var response = await fetch(`${BASE_URL}/activities/${id}`, {
     headers: getAuthHeaders(),
     method: "DELETE",
   });
-  return await result.json();
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
+  return await response.json();
 }
 
 export async function attendActivity(id) {
@@ -77,6 +98,12 @@ export async function attendActivity(id) {
     method: "POST",
     headers: getAuthHeaders(),
   });
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
+
   if (!response.ok) {
     const responseData = await response.json();
     throw new Error(responseData.message || "Failed to join activity");
@@ -89,6 +116,11 @@ export async function unattendActivity(id) {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
   if (!response.ok) {
     const responseData = await response.json();
     throw new Error(responseData.message || "Failed to leave activity");
@@ -101,7 +133,11 @@ export async function toggleActivityCancellation(id) {
     method: "POST",
     headers: getAuthHeaders(),
   });
-
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
   console.log("toggleActivityCancellation response:", response);
 
   if (!response.ok) {
@@ -119,12 +155,21 @@ export async function loginUser(data) {
     body: JSON.stringify(data),
   });
 
+  if (response.status === 500) {
+    throw new Error("Server error. Please try again later.");
+  }
+
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
   const responseData = await response.json();
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error("Invalid email or password");
     }
-    throw new Error(responseData.message || "Login failed");
+    throw new Error(responseData.message);
   }
   return responseData;
 }
@@ -138,33 +183,63 @@ export async function registerUser(data) {
     body: JSON.stringify(data),
   });
 
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
+
   const responseData = await response.json();
   if (!response.ok) {
-    throw new Error(responseData.message || "Registration failed");
+    const error = new Error(responseData.message);
+    error.errors = responseData.errors;
+    throw error;
   }
   return responseData;
 }
 
 // Profile APIs--------------------------------
-export async function uploadProfilePhoto(file) {
+export async function editProfile(data) {
   const token = useAuthStore.getState().token;
 
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const response = await fetch(`${BASE_URL}/profiles/upload-photo`, {
-    method: "POST",
+  const response = await fetch(`${BASE_URL}/profiles/me`, {
+    method: "PUT",
     headers: {
       Authorization: token ? `Bearer ${token}` : "",
     },
-    body: formData,
+    body: data,
   });
 
-  if (!response.ok) {
-    const responseData = await response.json();
-    throw new Error(responseData.message || "Photo upload failed");
+  if (response.status === 401 || response.status === 404) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
   }
 
+  const responseData = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(responseData.message || "Update failed");
+  }
+  
+  return responseData;
+}
+
+
+export async function getProfile(userId) {
+  var response = await fetch(`${BASE_URL}/profiles/${userId}`, {
+    headers: getAuthHeaders(),
+  });
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to fetch profile");
+  }
   const data = await response.json();
-  return data; // 返回图片的 URL
+  return data;
 }

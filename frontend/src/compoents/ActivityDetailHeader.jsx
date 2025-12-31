@@ -1,47 +1,14 @@
 import { Card, Badge, CardMedia, Box, Typography, Button } from "@mui/material";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
-import {
-  attendActivity,
-  toggleActivityCancellation,
-  unattendActivity,
-} from "../http";
-import toast from "react-hot-toast";
-import useAuthStore from "../store/useAuthStore";
-import { useState } from "react";
+import useActivities from "../hooks/useActivities";
 
 export default function ActivityDetailsHeader({ activity }) {
-  // 实时计算 isHost 和 isAttending
-  const currentUser = useAuthStore((state) => state.user);
-  const isHost = currentUser?.id === activity.hostId;
-  const [isAttending, setIsAttending] = useState(activity.attendees.some((a) => a.id === currentUser?.id));
-  const [isCancelled, setIsCancelled] = useState(activity.isCancelled);
-
-  const handleToggleCancellation = async () => {
-    if (!isHost) return;
-    try {
-      if (isHost) {
-        await toggleActivityCancellation(activity.id);
-        setIsCancelled(!isCancelled);
-      }
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
-  const handleAttendance = async () => {
-    if (isHost) return;
-    try {
-      if (isAttending) {
-        await unattendActivity(activity.id);
-      } else {
-        await attendActivity(activity.id);
-      }
-      setIsAttending(!isAttending);
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
+  const {
+    toggleCancellationMutation,
+    attendActivityMutation,
+    unattendActivityMutation,
+  } = useActivities(activity.id);
 
   return (
     <Card
@@ -52,7 +19,7 @@ export default function ActivityDetailsHeader({ activity }) {
         overflow: "hidden",
       }}
     >
-      {isCancelled && (
+      {activity.isCancelled && (
         <Badge
           sx={{ position: "absolute", left: 40, top: 20, zIndex: 1000 }}
           color="error"
@@ -92,7 +59,7 @@ export default function ActivityDetailsHeader({ activity }) {
           <Typography variant="subtitle2">
             Hosted by{" "}
             <Link
-              to={`/profiles/${activity.hostDisplayName}`}
+              to={`/profiles/${activity.hostId}`}
               style={{ color: "white", fontWeight: "bold" }}
             >
               {activity.hostDisplayName}
@@ -103,22 +70,24 @@ export default function ActivityDetailsHeader({ activity }) {
         {/* Buttons aligned to the right
         isHost 能看到的的, 以及非 Host 看到的按钮 */}
         <Box sx={{ display: "flex", gap: 2 }}>
-          {isHost ? (
+          {activity.isHost ? (
             <>
               <Button
                 variant="contained"
-                color={isCancelled ? "success" : "error"}
+                color={activity.isCancelled ? "success" : "error"}
                 sx={{ borderRadius: 2 }}
-                onClick={handleToggleCancellation}
+                onClick={() => toggleCancellationMutation.mutate(activity.id)}
               >
-                {isCancelled ? "Re-activate Activity" : "Cancel Activity"}
+                {activity.isCancelled
+                  ? "Re-activate Activity"
+                  : "Cancel Activity"}
               </Button>
               <Button
                 variant="contained"
                 color="primary"
                 component={Link}
                 to={`/edit/${activity.id}`}
-                disabled={isCancelled}
+                disabled={activity.isCancelled}
                 sx={{ borderRadius: 2 }}
               >
                 Edit activity
@@ -127,11 +96,15 @@ export default function ActivityDetailsHeader({ activity }) {
           ) : (
             <Button
               variant="contained"
-              color={isAttending ? "primary" : "info"}
-              onClick={handleAttendance}
-              disabled={isCancelled}
+              color={activity.isAttending ? "primary" : "info"}
+              onClick={
+                activity.isAttending
+                  ? () => unattendActivityMutation.mutate(activity.id)
+                  : () => attendActivityMutation.mutate(activity.id)
+              }
+              disabled={activity.isCancelled}
             >
-              {isAttending ? "Cancel Attendance" : "Join Activity"}
+              {activity.isAttending ? "Cancel Attendance" : "Join Activity"}
             </Button>
           )}
         </Box>

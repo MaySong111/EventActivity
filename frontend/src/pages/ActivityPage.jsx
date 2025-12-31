@@ -1,12 +1,11 @@
 import { Box, Button, Container, Grid2, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import ActivityCard from "../compoents/ActivityCard";
-import { getActivities } from "../http";
 import ActivityFilters from "../compoents/ActivityFilters";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import useAuthStore from "../store/useAuthStore";
 import toast from "react-hot-toast";
+import useActivities from "../hooks/useActivities";
 
 export default function ActivitiesPage() {
   // 用react Query,那就不需要useState这个本地存储了,直接用useQuery去fetch数据就行, 而且也不用useEffect去fetch数据
@@ -36,27 +35,19 @@ export default function ActivitiesPage() {
 
   // 注意点: useQuery 调用 queryFn 后，返回的数据会被赋值给 data. 所以这里的 response 就是 getActivities 返回的数据
   // 但是我后端{isSuccess, message , data} 也就是response,也是 queryKey: ["activities"],这个key对应的数据, 注意只有response.data 才是我想要的活动数组
-  const {
-    data: activities,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["activities"],
-    queryFn: getActivities,
-  });
+  const { activities, isLoadingActivities, activitiesError } = useActivities();
   // console.log("ActivityPage response data part:", activities);
   const navigate = useNavigate();
   const { logout } = useAuthStore();
-
   useEffect(() => {
-    if (error?.message === "AUTH/TOKEN_EXPIRED") {
+    if (activitiesError?.message === "AUTH/TOKEN_EXPIRED") {
       logout();
       toast.error("Token expired. Please login again.");
       navigate("/login");
     }
-  }, [error, logout, navigate]);
+  }, [activitiesError, logout, navigate]);
 
-  if (isLoading) return <Typography>Loading...</Typography>;
+  if (isLoadingActivities) return <Typography>Loading...</Typography>;
   if (!activities || activities.length === 0)
     return (
       <Box sx={{ textAlign: "center", mt: 10 }}>

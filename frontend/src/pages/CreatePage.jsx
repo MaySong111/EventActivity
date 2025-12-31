@@ -11,18 +11,12 @@ import {
   List,
   ListItemButton,
 } from "@mui/material";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-  createActivity,
-  getActivity,
-  LocationIQ_API_KEY,
-  updateActivity,
-} from "../http";
+import { LocationIQ_API_KEY } from "../http";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
-import useAuthStore from "../store/useAuthStore";
+import useActivities from "../hooks/useActivities";
 
 export default function CreatePage() {
   const navigate = useNavigate();
@@ -78,39 +72,39 @@ export default function CreatePage() {
     setSuggestions([]); // 清空建议列表
   };
 
-  const queryClient = useQueryClient();
-  // 定义 createMutation函数---发post请求新建一个 activity
-  const createActivityMutation = useMutation({
-    mutationFn: createActivity, // 应该是定义函数, 而不是调用函数!!!!!
-    // 成功后的操作: onSuccess 这里是在执行fetch之后才会调用,所以这里不能放 验证逻辑
-    onSuccess: (result) => {
-      // console.log("Mutation successful:", result);
-      toast.success(result.message);
-      // 更新缓存
-      queryClient.invalidateQueries(["activities"]);
-      // // 重置表单
-      // 登录成功会跳转页面，清空表单没意义，而且如果登录失败，用户还得重新输入。---同样这里也是一样,不要清空表单
-      // setForm({
-      //   title: "",
-      //   description: "",
-      //   category: "",
-      //   dateTime: "",
-      //   city: "",
-      //   venue: "",
-      // });
-      // 跳转页面
-      navigate("/activities");
-    },
-    onError: (error) => {
-      if (error.status === 401) {
-        // Token 过期或无效，清除并跳转到登录页
-        useAuthStore.getState().logout();
-        toast.error("Session expired. Please log in again.");
-        navigate("/login");
-        return;
-      }
-    },
-  });
+  // const queryClient = useQueryClient();
+  // // 定义 createMutation函数---发post请求新建一个 activity
+  // const createActivityMutation = useMutation({
+  //   mutationFn: createActivity, // 应该是定义函数, 而不是调用函数!!!!!
+  //   // 成功后的操作: onSuccess 这里是在执行fetch之后才会调用,所以这里不能放 验证逻辑
+  //   onSuccess: (result) => {
+  //     // console.log("Mutation successful:", result);
+  //     toast.success(result.message);
+  //     // 更新缓存
+  //     queryClient.invalidateQueries(["activities"]);
+  //     // // 重置表单
+  //     // 登录成功会跳转页面，清空表单没意义，而且如果登录失败，用户还得重新输入。---同样这里也是一样,不要清空表单
+  //     // setForm({
+  //     //   title: "",
+  //     //   description: "",
+  //     //   category: "",
+  //     //   dateTime: "",
+  //     //   city: "",
+  //     //   venue: "",
+  //     // });
+  //     // 跳转页面
+  //     navigate("/activities");
+  //   },
+  //   onError: (error) => {
+  //     if (error.status === 401) {
+  //       // Token 过期或无效，清除并跳转到登录页
+  //       useAuthStore.getState().logout();
+  //       toast.error("Session expired. Please log in again.");
+  //       navigate("/login");
+  //       return;
+  //     }
+  //   },
+  // });
 
   // part2: 编辑功能的实现---2.1从缓存中获取activity数据
   // 从ActivitiesPage点击view进入到ActivityDetailPage(会看到跳转的url是id的页面--然后ActivityDetailHeader页面点击manage event按钮)-点击这个按钮会跳转到manage/id页面(其实就是CreatePage.jsx页面)
@@ -119,12 +113,15 @@ export default function CreatePage() {
   const { id } = useParams();
   // console.log("CreatePage id param:", id);
   const isEditMode = !!id; // 有id就是编辑模式,没有id就是创建模式
-  const { data: activity } = useQuery({
-    queryKey: ["activities", id],
-    queryFn: () => getActivity(id),
-    // enabled: !!id, // 只有当 id 存在时才执行该查询--不用isEditMode这一变量也行,但是因为我后续的jsx中要用这个, 就定义了一个新的变量isEditMode
-    enabled: isEditMode, // 只有编辑模式才执行查询
-  });
+  // const { data: activity } = useQuery({
+  //   queryKey: ["activities", id],
+  //   queryFn: () => getActivity(id),
+  //   // enabled: !!id, // 只有当 id 存在时才执行该查询--不用isEditMode这一变量也行,但是因为我后续的jsx中要用这个, 就定义了一个新的变量isEditMode
+  //   enabled: isEditMode, // 只有编辑模式才执行查询
+  // });
+
+  const { createActivityMutation, updateActivityMutation, activity } =
+    useActivities(id);
 
   // part2: 编辑功能的实现---2.2把获取到的activity数据填充到表单中---编辑模式下填充form
   useEffect(() => {
@@ -163,17 +160,17 @@ export default function CreatePage() {
   // 就是上面的 useEffect 监听 isEditMode 变化, 重置表单!!!!!!!!!!!!!
 
   // part2: 编辑功能的实现---2.3定义 updateMutation函数---发put请求更新一个 activity
-  const updateActivityMutation = useMutation({
-    mutationFn: ({ id, activity }) => updateActivity(id, activity),
-    onSuccess: (result) => {
-      toast.success(result.message);
-      // 更新缓存
-      queryClient.invalidateQueries(["activities"]);
-      queryClient.invalidateQueries(["activities", id]);
-      // 跳转页面
-      navigate(`/activities/${id}`);
-    },
-  });
+  // const updateActivityMutation = useMutation({
+  //   mutationFn: ({ id, activity }) => updateActivity(id, activity),
+  //   onSuccess: (result) => {
+  //     toast.success(result.message);
+  //     // 更新缓存
+  //     queryClient.invalidateQueries(["activities"]);
+  //     queryClient.invalidateQueries(["activities", id]);
+  //     // 跳转页面
+  //     navigate(`/activities/${id}`);
+  //   },
+  // });
 
   // 提交表单
   const handleSubmit = (e) => {
@@ -200,14 +197,20 @@ export default function CreatePage() {
   };
 
   // part2: 编辑功能的实现---2.1权限校验---只有host才能编辑
-  if (isEditMode && activity && !activity.isHost) {
-    navigate(`/activities/${id}`);
-    return null;
-  }
+  const handleEdit = () => {
+    if (isEditMode && activity && !activity.isHost) {
+      navigate(`/activities/${id}`);
+    }
+  };
 
   return (
     <Paper sx={{ borderRadius: 3, p: 3 }}>
-      <Typography variant="h5" gutterBottom color="primary">
+      <Typography
+        variant="h5"
+        gutterBottom
+        color="primary"
+        onClick={handleEdit}
+      >
         {isEditMode ? "Edit Activity" : "Create Activity"}
       </Typography>
       <Box
@@ -254,10 +257,9 @@ export default function CreatePage() {
           name="date"
           value={form.date}
           onChange={handleChange}
-          slotProps={{
-            inputLabel: {
-              shrink: true,
-            },
+          InputLabelProps={{ shrink: true }}
+          InputProps={{
+            onClick: (e) => e.target.showPicker?.(),
           }}
         />
         <TextField

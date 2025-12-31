@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 
 export default function ActivityDetailsSidebar({ activity }) {
-  console.log(activity);
+  // console.log(activity);
   
   return (
     <>

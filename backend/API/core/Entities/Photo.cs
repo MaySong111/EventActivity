@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace API.core.Entities
 {
     public class Photo
@@ -8,5 +10,6 @@ namespace API.core.Entities
 
         //nav prop
         public required string UserId { get; set; }
+        public User? User { get; set; }
     }
 }

@@ -16,15 +16,9 @@ import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { deleteActivity } from "../http";
-import useAuthStore from "../store/useAuthStore";
 
 export default function ActivityCard({ activity }) {
-  // console.log("ActivityCard activity:", activity)
-  // 实时计算 isHost 和 isAttending
-  const currentUser = useAuthStore((state) => state.user);
-  const isHost = currentUser?.id === activity.hostId;
-  const isAttending = activity.attendees.some((a) => a.id === currentUser?.id);
-  const isCancelled = activity.isCancelled;
+const {isHost, isAttending, isCancelled} = activity;
 
   const label = isHost
     ? "You are hosting"
@@ -71,7 +65,7 @@ export default function ActivityCard({ activity }) {
               sx={{ fontWeight: 400, fontSize: "1rem" }}
             >
               Hosted by{" "}
-              <Link to={`/profiles/${activity.hostDisplayName}`}>
+              <Link to={`/profiles/${activity.hostId}`}>
                 {activity.hostDisplayName}
               </Link>
             </Typography>
@@ -130,7 +124,8 @@ export default function ActivityCard({ activity }) {
             <Tooltip key={attendee.id} title={attendee.displayName}>
               <Avatar
                 alt={attendee.displayName}
-                to={`/profiles/${attendee.displayName}`}
+                component={Link}
+                to={`/profiles/${attendee.id}`}
                 src={attendee.imageUrl}
               />
             </Tooltip>

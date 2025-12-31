@@ -187,7 +187,7 @@ namespace API.Controllers
             };
             context.ActivityAttendees.Add(attendance);
             await context.SaveChangesAsync();
-            return Ok(new { Message = "Joined activity successfully" });
+            return Ok();
         }
 
         // non-host user cancel attendance

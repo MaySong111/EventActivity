@@ -1,63 +1,91 @@
 using System.Security.Claims;
 using API.core.AppDbContext;
+using API.core.Dtos.Profiles;
 using API.core.Entities;
 using API.core.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     [Route("api/[controller]")]
     public class ProfilesController(CloudinaryService _cloudinaryService, AppDbContext _context) : ControllerBase
     {
-        [HttpPost("upload-photo")]
-        public async Task<IActionResult> UploadPhoto([FromForm] IFormFile file)
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateProfile([FromForm] UpdateProfileDto dto)
         {
-            // 1. validate the image
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest(new { message = "No File uploaded." });
-            }
-
-            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-            var permittedExtensions = new[] { ".jpg", ".jpeg", ".png" };
-            if (!permittedExtensions.Contains(ext))
-            {
-                return BadRequest(new { message = "Invalid file type. Only JPG, JPEG, and PNG are allowed." });
-            }
-
-            // 2. get current user id
-            // 当前登录的用户id
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (currentUserId == null)
-            {
-                return Unauthorized();
-            }
-            // 找用户表--对应的photo导航属性,到photos表找对应的UserId---和当前登录的用户id比对
-            var existing = _context.Users.Include(u => u.Photo).FirstOrDefault(u => u.Id == currentUserId);
 
-            if (existing != null && existing.Photo != null)
+            var user = await _context.Users.Include(u => u.Photo).FirstOrDefaultAsync(u => u.Id == currentUserId);
+
+            if (user == null)
             {
-                // delete existing photo from cloudinary
-                await _cloudinaryService.DeletePhotoAsync(existing.Photo.PublicId);
-                // delete existing photo record from database
-                _context.Photos.Remove(existing.Photo);
+                return NotFound(new { message = "User not found" });
             }
 
-            // 3. upload new photo to cloudinary
-            var uploadResult = _cloudinaryService.UploadPhotoAsync(file).Result;
-            // 4. save photo info to database
-            var photo = new Photo
-            {
-                Url = uploadResult.Url,
-                PublicId = uploadResult.PublicId,
-                UserId = currentUserId
-            };
+            user.DisplayName = dto.DisplayName;
+            user.Bio = dto.Bio;
 
-            _context.Photos.Add(photo);
+            if (dto.File != null)
+            {
+                var ext = Path.GetExtension(dto.File.FileName).ToLowerInvariant();
+                var permittedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+
+                if (!permittedExtensions.Contains(ext))
+                {
+                    return BadRequest(new { message = "Invalid file type" });
+                }
+
+                if (user.Photo != null)
+                {
+                    await _cloudinaryService.DeletePhotoAsync(user.Photo.PublicId);
+                    _context.Photos.Remove(user.Photo);
+                }
+
+                var uploadResult = await _cloudinaryService.UploadPhotoAsync(dto.File);
+
+                var photo = new Photo
+                {
+                    Url = uploadResult.Url,
+                    PublicId = uploadResult.PublicId,
+                    UserId = currentUserId
+                };
+
+                _context.Photos.Add(photo);
+            }
+
             await _context.SaveChangesAsync();
-            return Ok(new { imageUrl = uploadResult.Url });
+
+            return Ok(new
+            {
+                displayName = user.DisplayName,
+                imageUrl = user.Photo?.Url ?? "/default-avatar.png",
+                bio = user.Bio
+            });
+        }
+
+
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetProfile(string userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.Photo)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            return Ok(new
+            {
+                displayName = user.DisplayName,
+                imageUrl = user.Photo?.Url ?? "/default-avatar.png",
+                bio = user.Bio
+            });
         }
     }
 }

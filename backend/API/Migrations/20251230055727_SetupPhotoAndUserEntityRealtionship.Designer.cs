@@ -3,6 +3,7 @@ using System;
 using API.core.AppDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251230055727_SetupPhotoAndUserEntityRealtionship")]
+    partial class SetupPhotoAndUserEntityRealtionship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -85,35 +88,6 @@ namespace API.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ActivityAttendees");
-                });
-
-            modelBuilder.Entity("API.core.Entities.Comment", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ActivityId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ActivityId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("API.core.Entities.Photo", b =>
@@ -362,25 +336,6 @@ namespace API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("API.core.Entities.Comment", b =>
-                {
-                    b.HasOne("API.core.Entities.Activity", "Activity")
-                        .WithMany("Comments")
-                        .HasForeignKey("ActivityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.core.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Activity");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("API.core.Entities.Photo", b =>
                 {
                     b.HasOne("API.core.Entities.User", "User")
@@ -446,8 +401,6 @@ namespace API.Migrations
             modelBuilder.Entity("API.core.Entities.Activity", b =>
                 {
                     b.Navigation("Attendees");
-
-                    b.Navigation("Comments");
                 });
 
             modelBuilder.Entity("API.core.Entities.User", b =>

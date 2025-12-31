@@ -50,12 +50,21 @@ export default function Register() {
     // 前端验证
     const newErrors = {};
     if (!email) newErrors.email = "Email is required";
+    if (email && !/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Invalid email format";
+    }
+
     if (!displayName) newErrors.displayName = "Display name is required";
     if (!password) newErrors.password = "Password is required";
 
     if (password && password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
+    if (password.toLowerCase() === password) {
+      newErrors.password =
+        "Password must contain at least one uppercase letter";
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;

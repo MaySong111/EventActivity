@@ -16,6 +16,7 @@ namespace API.core.Entities
         public string Latitude { get; set; }
         public string Longitude { get; set; }
         public List<ActivityAttendee> Attendees { get; set; } = [];
+        public List<Comment> Comments { get; set; } = [];
     }
 }
 

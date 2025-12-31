@@ -16,7 +16,6 @@ import LogoutIcon from "@mui/icons-material/Logout";
 const pages = [
   { label: "ACTIVITIES", path: "/activities" },
   { label: "CREATE ACTIVITY", path: "/create-activity" },
-  { label: "ABOUT", path: "/about" },
 ];
 
 export default function Navbar() {
@@ -61,9 +60,7 @@ export default function Navbar() {
             {/* user avatar */}
             <Avatar
               src={
-                currentUser.imgUrl
-                  ? `https://localhost:5001${currentUser.imgUrl}`
-                  : "/default-avatar.png"
+                currentUser.imageUrl || "/default-avatar.png"
               }
               alt={currentUser?.displayName}
               sx={{ cursor: "pointer" }}
@@ -86,7 +83,7 @@ export default function Navbar() {
               >
                 <Button
                   component={Link}
-                  to={`/profiles/${currentUser.displayName}`}
+                  to={`/profiles/${currentUser.id}`}
                   sx={{
                     justifyContent: "flex-start",
                     width: "100%",
