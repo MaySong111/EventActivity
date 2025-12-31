@@ -1,11 +1,19 @@
-import { Box, Button, Container, Grid2, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Container,
+  Grid2,
+  Pagination,
+  Typography,
+} from "@mui/material";
 import ActivityCard from "../compoents/ActivityCard";
 import ActivityFilters from "../compoents/ActivityFilters";
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import useAuthStore from "../store/useAuthStore";
 import toast from "react-hot-toast";
 import useActivities from "../hooks/useActivities";
+import { pageSize } from "../http";
 
 export default function ActivitiesPage() {
   // 用react Query,那就不需要useState这个本地存储了,直接用useQuery去fetch数据就行, 而且也不用useEffect去fetch数据
@@ -35,7 +43,18 @@ export default function ActivitiesPage() {
 
   // 注意点: useQuery 调用 queryFn 后，返回的数据会被赋值给 data. 所以这里的 response 就是 getActivities 返回的数据
   // 但是我后端{isSuccess, message , data} 也就是response,也是 queryKey: ["activities"],这个key对应的数据, 注意只有response.data 才是我想要的活动数组
-  const { activities, isLoadingActivities, activitiesError } = useActivities();
+  const [filter, setFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const { activities, totalCount, isLoadingActivities, activitiesError } =
+    useActivities(null, pageSize, currentPage, filter);
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  const handleChangeCurrentPage = (_, value) => {
+    setCurrentPage(value);
+  };
+
+  console.log("ActivitiesPage render part:", currentPage, filter);
+
   // console.log("ActivityPage response data part:", activities);
   const navigate = useNavigate();
   const { logout } = useAuthStore();
@@ -71,15 +90,22 @@ export default function ActivitiesPage() {
                 <ActivityCard key={activity.id} activity={activity} />
               ))}
             </Box>
+              
+            <Pagination
+              count={totalPages}
+              page={currentPage}
+              onChange={handleChangeCurrentPage}
+              color="secondary"
+              sx={{
+                mt: 4,
+                mx: "auto",
+              }}
+            />
           </Grid2>
 
           {/* 右边：选中的活动详情 */}
           <Grid2 size={4}>
-            {/* {selectedActivity && (
-                <ActivityCard activity={selectedActivity} isDetail />
-              )}
-              <CreatePage /> */}
-            <ActivityFilters />
+            <ActivityFilters filter={filter} setFilter={setFilter} />
           </Grid2>
         </Grid2>
       </Container>

@@ -10,7 +10,7 @@ import {
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
-export default function ActivityFilters() {
+export default function ActivityFilters({ filter, setFilter }) {
   return (
     <div>
       <Box
@@ -36,13 +36,19 @@ export default function ActivityFilters() {
               Filters
             </Typography>
             <MenuList>
-              <MenuItem>
+              <MenuItem selected={!filter} onClick={() => setFilter("")}>
                 <ListItemText primary="All Activities" />
               </MenuItem>
-              <MenuItem>
+              <MenuItem
+                selected={filter === "attending"}
+                onClick={() => setFilter("attending")}
+              >
                 <ListItemText primary="I'm attending" />
               </MenuItem>
-              <MenuItem>
+              <MenuItem
+                selected={filter === "hosting"}
+                onClick={() => setFilter("hosting")}
+              >
                 <ListItemText primary="I'm hosting" />
               </MenuItem>
             </MenuList>

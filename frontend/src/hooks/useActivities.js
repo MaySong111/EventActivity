@@ -13,25 +13,33 @@ import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/useAuthStore";
 import toast from "react-hot-toast";
 
-export default function useActivities(id = null) {
+export default function useActivities(
+  id = null,
+  pageSize = 6,
+  currentPage = 1,
+  filter = ""
+) {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
   const queryClient = useQueryClient();
 
   const {
-    data: activities,
+    data,
     isLoading: isLoadingActivities,
     error: activitiesError,
   } = useQuery({
-    queryKey: ["activities"],
-    queryFn: () => getActivities(),
+    queryKey: ["activities",pageSize, currentPage, filter],
+    queryFn: () => getActivities(pageSize, currentPage, filter),
     enabled: !id && location.pathname === "/activities" && !!currentUser,
     select: (data) => {
-      return data.map((activity) => ({
-        ...activity,
-        isHost: currentUser?.id === activity.hostId,
-        isAttending: activity.attendees.some((a) => a.id === currentUser?.id),
-      }));
+      return {
+        totalCount: data.totalCount,
+        pagedActivities: data.pagedActivities.map((activity) => ({
+          ...activity,
+          isHost: currentUser?.id === activity.hostId,
+          isAttending: activity.attendees.some((a) => a.id === currentUser?.id),
+        })),
+      };
     },
   });
 
@@ -101,7 +109,8 @@ export default function useActivities(id = null) {
   });
 
   return {
-    activities,
+    activities: data?.pagedActivities,
+    totalCount: data?.totalCount,
     isLoadingActivities,
     activitiesError,
     activity,

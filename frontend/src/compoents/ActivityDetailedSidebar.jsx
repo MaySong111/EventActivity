@@ -12,7 +12,7 @@ import {
 
 export default function ActivityDetailsSidebar({ activity }) {
   // console.log(activity);
-  
+
   return (
     <>
       <Paper
@@ -25,7 +25,7 @@ export default function ActivityDetailsSidebar({ activity }) {
         }}
       >
         <Typography variant="h6">
-          {activity.attendees.length} people going
+          {activity.attendees.length} people attending
         </Typography>
       </Paper>
       <Paper sx={{ padding: 2 }}>

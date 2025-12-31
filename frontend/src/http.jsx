@@ -4,6 +4,8 @@ export const BASE_URL = "https://localhost:5001/api";
 export const LocationIQ_API_KEY =
   "https://api.locationiq.com/v1/autocomplete?key=pk.84379dc40b13d8829c0e786f398d8be7";
 
+export const pageSize = 6;
+
 function getAuthHeaders() {
   const token = useAuthStore.getState().token;
   return {
@@ -12,10 +14,17 @@ function getAuthHeaders() {
   };
 }
 
-export async function getActivities() {
-  var response = await fetch(`${BASE_URL}/activities`, {
-    headers: getAuthHeaders(),
-  });
+export async function getActivities(
+  pageSize = 10,
+  currentPage = 1,
+  filter = ""
+) {
+  var response = await fetch(
+    `${BASE_URL}/activities/?pageSize=${pageSize}&currentPage=${currentPage}&filter=${filter}`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
   if (response.status === 401) {
     window.location.href = "/login";
     useAuthStore.getState().logout();
@@ -217,14 +226,13 @@ export async function editProfile(data) {
   }
 
   const responseData = await response.json();
-  
+
   if (!response.ok) {
     throw new Error(responseData.message || "Update failed");
   }
-  
+
   return responseData;
 }
-
 
 export async function getProfile(userId) {
   var response = await fetch(`${BASE_URL}/profiles/${userId}`, {
