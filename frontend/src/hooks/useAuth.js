@@ -24,7 +24,6 @@ export default function useAuth() {
     onSuccess: (result) => {
       const { token, userInfo } = result;
       login(userInfo, token);
-      toast.success("Login successful!");
       navigate("/");
     },
     onError: (error) => {

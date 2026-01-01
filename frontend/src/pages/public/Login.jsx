@@ -1,6 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
-import { loginUser } from "../../http";
+import { Link } from "react-router-dom";
 import {
   Button,
   TextField,
@@ -13,19 +11,16 @@ import {
 } from "@mui/material";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { useState } from "react";
-import useStore from "../../store/useAuthStore";
-import toast from "react-hot-toast";
+import useAuth from "../../hooks/useAuth";
 
 export default function Login() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     rememberMe: false,
   });
   const [errors, setErrors] = useState({});
-
-  const login = useStore((state) => state.login);
+  const { loginMutation } = useAuth();
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -35,24 +30,6 @@ export default function Login() {
     }));
   };
   // console.log("Current formData:", formData);
-
-  const loginMutation = useMutation({
-    mutationFn: loginUser,
-
-    onSuccess: (result) => {
-      // console.log("Login successful:", result);
-      const { token, userInfo } = result;
-      login(userInfo, token);
-      navigate("/");
-    },
-    onError: (error) => {
-      if (error.message === "Login failed") {
-        toast.error("Invalid email or password");
-      } else {
-        toast.error("Login failed. Please try again.");
-      }
-    },
-  });
 
   const handleSubmit = (e) => {
     e.preventDefault();

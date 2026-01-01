@@ -3,7 +3,6 @@ import { Group } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 
 export default function HomePage() {
-  console.log("1 HomePage 渲染了");
   return (
     <Paper
       elevation={0}

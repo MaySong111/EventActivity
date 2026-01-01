@@ -62,14 +62,14 @@ export default function ProfilePage() {
     if (formData.file) data.append("file", formData.file);
 
     try {
-      const updated = await editProfile(data);
+      const updatedProfile = await editProfile(data);
 
-      setProfileUser(updated);
+      setProfileUser(updatedProfile);
       setIsEditing(false);
 
       // !only update auth store if current user edited their own profile
       if (isCurrentUser) {
-        login({ ...currentUser, ...updated }, token);
+        login({ ...currentUser, ...updatedProfile }, token);
       }
 
       toast.success("Profile updated");
@@ -83,11 +83,24 @@ export default function ProfilePage() {
   return (
     <Box sx={{ maxWidth: 500, mx: "auto", p: 3 }}>
       <Paper sx={{ p: 2 }}>
-        <Typography variant="h4">Profile</Typography>
-        <Box sx={{ textAlign: "center" }}>
+        <Box
+          sx={{
+            textAlign: "center",
+            py: 3,
+            mb: 3,
+            borderBottom: "1px solid",
+            borderColor: "divider",
+          }}
+        >
           <Avatar
             src={preview}
-            sx={{ width: 130, height: 130, mx: "auto", mb: 2 }}
+            sx={{
+              width: 140,
+              height: 140,
+              mx: "auto",
+              mb: 1,
+              border: "4px solid white",
+            }}
           />
 
           {isEditing && isCurrentUser && (
@@ -146,9 +159,18 @@ export default function ProfilePage() {
         ) : (
           <>
             <Typography variant="h6">{profileUser.displayName}</Typography>
-            <Typography sx={{ mt: 2 }}>
-              {profileUser.bio || "No bio yet"}
-            </Typography>
+            <Box
+              sx={{
+                mt: 2,
+                p: 2,
+                bgcolor: "grey.50",
+                borderRadius: 2,
+              }}
+            >
+              <Typography color="text.secondary">
+                {profileUser.bio || "No bio yet"}
+              </Typography>
+            </Box>
 
             {isCurrentUser && (
               <Button

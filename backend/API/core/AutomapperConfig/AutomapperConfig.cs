@@ -17,14 +17,12 @@ namespace API.core.AutomapperConfig
             CreateMap<ActivityAttendee, UserProfileDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.User.Id))
                 .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.User.DisplayName))
-                .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.User.Bio))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.User.Photo.Url));
 
 
             CreateMap<User, UserProfileDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.DisplayName))
-                .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.Bio))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Photo.Url));
 
             CreateMap<Activity, ActivityDto>()
@@ -35,7 +33,11 @@ namespace API.core.AutomapperConfig
                 .ForMember(dest => dest.HostId,
                 opt => opt.MapFrom(src => src.Attendees.FirstOrDefault(aa => aa.IsHost)!.User.Id));
 
-            CreateMap<Comment, CommentDto>();
+            CreateMap<Comment, CommentDto>()
+                .ForMember(dest => dest.DisplayName,
+                opt => opt.MapFrom(src => src.User.DisplayName))
+                .ForMember(dest => dest.ImageUrl,
+                opt => opt.MapFrom(src => src.User.Photo.Url));
         }
     }
 }

@@ -5,6 +5,7 @@ using API.core.Entities;
 using API.core.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
@@ -45,7 +46,11 @@ namespace API.Controllers
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto)
         {
             // 1. find user by email
-            var user = await userManager.FindByEmailAsync(dto.Email);
+            // var user = await userManager.FindByEmailAsync(dto.Email); --- 没有关联Photo ---
+            var user = await userManager.Users
+                .Include(u => u.Photo)
+                .FirstOrDefaultAsync(u => u.Email == dto.Email);
+
             // 邮箱不存在 = 身份验证失败并不是找不到用户(所以不是NotFound),而是Unauthorized401
             if (user == null)
             {
@@ -66,7 +71,6 @@ namespace API.Controllers
                 // 3.2 create response DTO
                 return Ok(new AuthResponseDto
                 {
-                    IsSuccess = true,
                     Message = "Login successful.",
                     Token = token,
                     UserInfo = new UserProfileDto

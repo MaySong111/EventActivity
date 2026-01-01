@@ -15,9 +15,10 @@ import toast from "react-hot-toast";
 
 export default function useActivities(
   id = null,
-  pageSize = 6,
+  pageSize = 10,
   currentPage = 1,
-  filter = ""
+  filter = "",
+  startDate = null
 ) {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
@@ -28,8 +29,8 @@ export default function useActivities(
     isLoading: isLoadingActivities,
     error: activitiesError,
   } = useQuery({
-    queryKey: ["activities",pageSize, currentPage, filter],
-    queryFn: () => getActivities(pageSize, currentPage, filter),
+    queryKey: ["activities", filter, startDate, currentPage, pageSize],
+    queryFn: () => getActivities(pageSize, currentPage, filter, startDate),
     enabled: !id && location.pathname === "/activities" && !!currentUser,
     select: (data) => {
       return {
@@ -66,8 +67,9 @@ export default function useActivities(
   });
 
   const updateActivityMutation = useMutation({
-    mutationFn: ({ id, activity }) => updateActivity(id, activity),
-    onSuccess: (_, id) => {
+    mutationFn: updateActivity,
+    onSuccess: () => {
+      // console.log("useActivities - Updated activity",id);
       queryClient.invalidateQueries(["activities"]);
       queryClient.invalidateQueries(["activities", id]);
       navigate(`/activities/${id}`);
@@ -75,7 +77,7 @@ export default function useActivities(
   });
 
   const deleteActivityMutation = useMutation({
-    mutationFn: () => deleteActivity(id),
+    mutationFn: deleteActivity,
     onSuccess: (result) => {
       toast.success(result.message || "Deleted successfully");
       queryClient.invalidateQueries(["activities"]);
@@ -83,16 +85,16 @@ export default function useActivities(
   });
 
   const attendActivityMutation = useMutation({
-    mutationFn: () => attendActivity(id),
-    onSuccess: (_, id) => {
+    mutationFn: attendActivity,
+    onSuccess: () => {
       queryClient.invalidateQueries(["activities", id]);
       queryClient.invalidateQueries(["activities"]);
     },
   });
 
   const unattendActivityMutation = useMutation({
-    mutationFn: () => unattendActivity(id),
-    onSuccess: (_, id) => {
+    mutationFn: unattendActivity,
+    onSuccess: () => {
       queryClient.invalidateQueries(["activities", id]);
       queryClient.invalidateQueries(["activities"]);
       toast.success("Left activity successfully");
@@ -100,8 +102,8 @@ export default function useActivities(
   });
 
   const toggleCancellationMutation = useMutation({
-    mutationFn: () => toggleActivityCancellation(id),
-    onSuccess: (_, id) => {
+    mutationFn: toggleActivityCancellation,
+    onSuccess: () => {
       // console.log("queryClient invalidating queries for activity id:", id);
       queryClient.invalidateQueries(["activities", id]);
       queryClient.invalidateQueries(["activities"]);

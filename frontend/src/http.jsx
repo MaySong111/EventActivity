@@ -1,10 +1,11 @@
 import useAuthStore from "./store/useAuthStore";
 
+export const API_URL = "https://localhost:5001";
 export const BASE_URL = "https://localhost:5001/api";
 export const LocationIQ_API_KEY =
   "https://api.locationiq.com/v1/autocomplete?key=pk.84379dc40b13d8829c0e786f398d8be7";
 
-export const pageSize = 6;
+export const pageSize = 10;
 
 function getAuthHeaders() {
   const token = useAuthStore.getState().token;
@@ -14,13 +15,10 @@ function getAuthHeaders() {
   };
 }
 
-export async function getActivities(
-  pageSize = 10,
-  currentPage = 1,
-  filter = ""
-) {
+export async function getActivities(pageSize, currentPage, filter, startDate) {
+  const dateStr = startDate ? startDate.toISOString() : "";
   var response = await fetch(
-    `${BASE_URL}/activities/?pageSize=${pageSize}&currentPage=${currentPage}&filter=${filter}`,
+    `${BASE_URL}/activities/?pageSize=${pageSize}&currentPage=${currentPage}&filter=${filter}&startDate=${dateStr}`,
     {
       headers: getAuthHeaders(),
     }
@@ -69,7 +67,7 @@ export async function createActivity(activity) {
   return response.json();
 }
 
-export async function updateActivity(id, activity) {
+export async function updateActivity({id, activity}) {
   console.log("Updating: activity object no id", activity);
   var response = await fetch(`${BASE_URL}/activities/${id}`, {
     method: "PUT",
@@ -174,10 +172,8 @@ export async function loginUser(data) {
     return;
   }
   const responseData = await response.json();
+
   if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error("Invalid email or password");
-    }
     throw new Error(responseData.message);
   }
   return responseData;
@@ -250,4 +246,60 @@ export async function getProfile(userId) {
   }
   const data = await response.json();
   return data;
+}
+
+// Comments APIs--------------------------------
+export async function getComments(activityId) {
+  var response = await fetch(`${BASE_URL}/comments/${activityId}`, {
+    headers: getAuthHeaders(),
+  });
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to fetch comments");
+  }
+  const data = await response.json();
+  return data;
+}
+
+export async function addComment({ id, body }) {
+  var response = await fetch(`${BASE_URL}/comments`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ id, body }),
+  });
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to create comment");
+  }
+  return true;
+}
+
+export async function deleteComment(commentId) {
+  var response = await fetch(`${BASE_URL}/comments/${commentId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to delete comment");
+  }
+  return true;
 }

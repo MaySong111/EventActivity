@@ -11,10 +11,6 @@ const useAuthStore = create(
       },
       logout() {
         set({ user: null, token: null })
-        // clear react-query cache
-        if(window.queryClient) {
-          window.queryClient.clear();
-        }
       },
     }),
     { name: "events-auth" }

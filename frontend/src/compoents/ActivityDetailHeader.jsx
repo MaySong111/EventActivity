@@ -44,7 +44,7 @@ export default function ActivityDetailsHeader({ activity }) {
           justifyContent: "space-between",
           alignItems: "flex-end",
           background:
-            "linear-gradient(to top, rgba(0, 0, 0, 1.0), transparent)",
+            "linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%)",
           boxSizing: "border-box",
         }}
       >

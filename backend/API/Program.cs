@@ -4,6 +4,7 @@ using API.core.AppDbContext;
 using API.core.AutomapperConfig;
 using API.core.Entities;
 using API.core.Services;
+using API.SignalR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,8 @@ builder.Services.AddScoped<JwtTokenCreator>();
 builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
+// register SignalR
+builder.Services.AddSignalR();
 
 builder.Services.AddCors(x =>
 {
@@ -54,7 +57,8 @@ builder.Services.AddCors(x =>
     {
         policy.WithOrigins("http://localhost:3000")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -73,5 +77,6 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<CommentHub>("/commentHub");
 
 app.Run();

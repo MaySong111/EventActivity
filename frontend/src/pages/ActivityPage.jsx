@@ -14,6 +14,7 @@ import useAuthStore from "../store/useAuthStore";
 import toast from "react-hot-toast";
 import useActivities from "../hooks/useActivities";
 import { pageSize } from "../http";
+import useActivityStore from "../store/useActivityStore";
 
 export default function ActivitiesPage() {
   // 用react Query,那就不需要useState这个本地存储了,直接用useQuery去fetch数据就行, 而且也不用useEffect去fetch数据
@@ -43,17 +44,17 @@ export default function ActivitiesPage() {
 
   // 注意点: useQuery 调用 queryFn 后，返回的数据会被赋值给 data. 所以这里的 response 就是 getActivities 返回的数据
   // 但是我后端{isSuccess, message , data} 也就是response,也是 queryKey: ["activities"],这个key对应的数据, 注意只有response.data 才是我想要的活动数组
-  const [filter, setFilter] = useState("");
+  const filter = useActivityStore((state) => state.filter);
+  const startDate = useActivityStore((state) => state.startDate);
+
   const [currentPage, setCurrentPage] = useState(1);
   const { activities, totalCount, isLoadingActivities, activitiesError } =
-    useActivities(null, pageSize, currentPage, filter);
+    useActivities(null, pageSize, currentPage, filter, startDate);
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const handleChangeCurrentPage = (_, value) => {
     setCurrentPage(value);
   };
-
-  console.log("ActivitiesPage render part:", currentPage, filter);
 
   // console.log("ActivityPage response data part:", activities);
   const navigate = useNavigate();
@@ -67,7 +68,8 @@ export default function ActivitiesPage() {
   }, [activitiesError, logout, navigate]);
 
   if (isLoadingActivities) return <Typography>Loading...</Typography>;
-  if (!activities || activities.length === 0)
+
+  if (!filter && (!activities || activities.length === 0))
     return (
       <Box sx={{ textAlign: "center", mt: 10 }}>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
@@ -83,29 +85,38 @@ export default function ActivitiesPage() {
     <Box sx={{ bgcolor: "#eeeeee", minHeight: "100vh" }}>
       <Container maxWidth="xl" sx={{ mt: 3 }}>
         <Grid2 container spacing={3}>
-          {/* 左边：活动列表 */}
-          <Grid2 size={8}>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              {activities?.map((activity) => (
-                <ActivityCard key={activity.id} activity={activity} />
-              ))}
-            </Box>
-              
-            <Pagination
-              count={totalPages}
-              page={currentPage}
-              onChange={handleChangeCurrentPage}
-              color="secondary"
-              sx={{
-                mt: 4,
-                mx: "auto",
-              }}
-            />
-          </Grid2>
-
-          {/* 右边：选中的活动详情 */}
-          <Grid2 size={4}>
-            <ActivityFilters filter={filter} setFilter={setFilter} />
+          {/* 左边 */}
+          {filter && activities.length === 0 ? (
+            <Grid2 size={8}>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                No activities found for the selected filter.
+              </Typography>
+            </Grid2>
+          ) : (
+            <Grid2 size={8}>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                {activities?.map((activity) => (
+                  <ActivityCard key={activity.id} activity={activity} />
+                ))}
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={handleChangeCurrentPage}
+                  color="secondary"
+                  sx={{
+                    mt: 4,
+                    mx: "auto",
+                  }}
+                />
+              </Box>
+            </Grid2>
+          )}
+          {/* 右边筛选区域 */}
+          <Grid2
+            size={4}
+            sx={{ position: "sticky", top: "100px", alignSelf: "flex-start" }}
+          >
+            <ActivityFilters />
           </Grid2>
         </Grid2>
       </Container>

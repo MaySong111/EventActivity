@@ -30,11 +30,19 @@ namespace API.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult<List<ActivityDto>>> GetActivities([FromQuery] string? filter,
+        public async Task<ActionResult<List<ActivityDto>>> GetActivities([FromQuery] string? filter="",
+        [FromQuery] DateTime? startDate = null,
             [FromQuery] int currentPage = 1,
-            [FromQuery] int pageSize = 6)
+            [FromQuery] int pageSize = 10)
         {
 
+             var query = _context.Activities.AsQueryable();
+
+            // 如果有开始日期筛选条件，只返回在该日期之后的活动
+            if (startDate.HasValue)
+            {
+                query = query.Where(a => a.Date >= startDate.Value);
+            }
             // var activities = await context.Activities
             //     .Include(a => a.Attendees)
             //     .ThenInclude(aa => aa.User)
@@ -43,8 +51,7 @@ namespace API.Controllers
             // var activitiesDto = await context.Activities.ProjectTo<ActivityDto>(mapper.ConfigurationProvider).ToListAsync();
             // 1. get current user id
             var currentUserId = GetCurrentUserId();
-            var query = _context.Activities.AsQueryable();
-
+           
             // 如果有筛选条件，只返回当前用户主持的活动
             if (!string.IsNullOrEmpty(filter) && currentUserId != null)
             {
@@ -57,7 +64,7 @@ namespace API.Controllers
                     query = query.Where(a => a.Attendees.Any(aa => aa.UserId == currentUserId && !aa.IsHost));
                 }
             }
-
+            
             // 2. apply pagination
             var totalCount = await query.CountAsync();
             var pagedActivities = await query.ProjectTo<ActivityDto>(mapper.ConfigurationProvider).

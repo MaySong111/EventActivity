@@ -12,6 +12,7 @@ import useAuthStore from "../store/useAuthStore";
 import { Group } from "@mui/icons-material";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
+import useActivityStore from "../store/useActivityStore";
 
 const pages = [
   { label: "ACTIVITIES", path: "/activities" },
@@ -25,11 +26,13 @@ export default function Navbar() {
   const logout = useAuthStore((state) => state.logout);
   const isLoginedIn = !!token;
 
+  const setFilter = useActivityStore((state) => state.setFilter);
+  const setStartDate = useActivityStore((state) => state.setStartDate);
   return (
     <AppBar position="fixed">
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         <Group sx={{ height: 40, width: 40 }} />
-        {/* 左侧导航 */}
+        {/* leftside nav */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {pages.map((page) => (
             <Button
@@ -37,13 +40,17 @@ export default function Navbar() {
               component={Link}
               to={`${page.path}`}
               color="inherit"
+              onClick={() => {
+                setFilter("");
+                setStartDate(null);
+              }}
             >
               {page.label}
             </Button>
           ))}
         </Box>
 
-        {/* 右侧登录 / 用户菜单 */}
+        {/* rightside login : user menu */}
         {isLoginedIn ? (
           <Box
             sx={{
@@ -59,9 +66,7 @@ export default function Navbar() {
             <Typography>{currentUser.displayName}</Typography>
             {/* user avatar */}
             <Avatar
-              src={
-                currentUser.imageUrl || "/default-avatar.png"
-              }
+              src={currentUser.imageUrl}
               alt={currentUser?.displayName}
               sx={{ cursor: "pointer" }}
             />

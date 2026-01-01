@@ -9,8 +9,14 @@ import {
 } from "@mui/material";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import useActivityStore from "../store/useActivityStore";
 
-export default function ActivityFilters({ filter, setFilter }) {
+export default function ActivityFilters() {
+  const filter = useActivityStore((state) => state.filter);
+  const setFilter = useActivityStore((state) => state.setFilter);
+  const startDate = useActivityStore((state) => state.startDate);
+  const setStartDate = useActivityStore((state) => state.setStartDate);
+
   return (
     <div>
       <Box
@@ -67,7 +73,7 @@ export default function ActivityFilters({ filter, setFilter }) {
             <Event sx={{ mr: 1 }} />
             Select Date
           </Typography>
-          <Calendar />
+          <Calendar value={startDate} onChange={(date) => setStartDate(date)} />
         </Box>
       </Box>
     </div>
