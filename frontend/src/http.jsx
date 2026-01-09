@@ -67,7 +67,7 @@ export async function createActivity(activity) {
   return response.json();
 }
 
-export async function updateActivity({id, activity}) {
+export async function updateActivity({ id, activity }) {
   console.log("Updating: activity object no id", activity);
   var response = await fetch(`${BASE_URL}/activities/${id}`, {
     method: "PUT",
@@ -165,12 +165,6 @@ export async function loginUser(data) {
   if (response.status === 500) {
     throw new Error("Server error. Please try again later.");
   }
-
-  if (response.status === 401) {
-    window.location.href = "/login";
-    useAuthStore.getState().logout();
-    return;
-  }
   const responseData = await response.json();
 
   if (!response.ok) {
@@ -187,12 +181,6 @@ export async function registerUser(data) {
     },
     body: JSON.stringify(data),
   });
-
-  if (response.status === 401) {
-    window.location.href = "/login";
-    useAuthStore.getState().logout();
-    return;
-  }
 
   const responseData = await response.json();
   if (!response.ok) {

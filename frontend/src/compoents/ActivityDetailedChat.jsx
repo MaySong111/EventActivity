@@ -10,10 +10,8 @@ import { Link, useParams } from "react-router-dom";
 import useComment from "../hooks/useComment";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import useAuthStore from "../store/useAuthStore";
 
 export default function ActivityDetailsChat() {
-  const { user } = useAuthStore((state) => state);
   const { id } = useParams();
   const { comments, addCommentMutation } = useComment(id);
   const [inputValue, setInputValue] = useState("");
@@ -37,18 +35,12 @@ export default function ActivityDetailsChat() {
 
   return (
     <>
-      <Box
-        sx={{
-          textAlign: "center",
-          bgcolor: "primary.main",
-          color: "white",
-          padding: 2,
-        }}
-      >
-        <Typography variant="h6">Chat about this event</Typography>
-      </Box>
       <Card>
         <CardContent>
+          <Typography variant="h6" fontWeight={600}>
+            Chat about this event below
+          </Typography>
+
           <div>
             <form>
               <TextField
