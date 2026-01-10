@@ -30,13 +30,13 @@ namespace API.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult<List<ActivityDto>>> GetActivities([FromQuery] string? filter="",
+        public async Task<ActionResult<List<ActivityDto>>> GetActivities([FromQuery] string? filter = "",
         [FromQuery] DateTime? startDate = null,
             [FromQuery] int currentPage = 1,
             [FromQuery] int pageSize = 10)
         {
 
-             var query = _context.Activities.AsQueryable();
+            var query = _context.Activities.AsQueryable();
 
             // 如果有开始日期筛选条件，只返回在该日期之后的活动
             if (startDate.HasValue)
@@ -51,7 +51,7 @@ namespace API.Controllers
             // var activitiesDto = await context.Activities.ProjectTo<ActivityDto>(mapper.ConfigurationProvider).ToListAsync();
             // 1. get current user id
             var currentUserId = GetCurrentUserId();
-           
+
             // 如果有筛选条件，只返回当前用户主持的活动
             if (!string.IsNullOrEmpty(filter) && currentUserId != null)
             {
@@ -64,7 +64,7 @@ namespace API.Controllers
                     query = query.Where(a => a.Attendees.Any(aa => aa.UserId == currentUserId && !aa.IsHost));
                 }
             }
-            
+
             // 2. apply pagination
             var totalCount = await query.CountAsync();
             var pagedActivities = await query.ProjectTo<ActivityDto>(mapper.ConfigurationProvider).
@@ -74,7 +74,7 @@ namespace API.Controllers
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ActivityDto>> GetActivityById([FromRoute] string id)
+        public async Task<ActionResult<IEnumerable<ActivityDto>>> GetActivityById([FromRoute] string id)
         {
             // var activity = await context.Activities
             //     .Include(a => a.Attendees)
@@ -241,5 +241,39 @@ namespace API.Controllers
             await _context.SaveChangesAsync();
             return Ok();
         }
+
+
+
+        //  loggedInUser can get activity details(获取当前用户的所有活动)
+        [HttpGet("mine")]
+        public async Task<ActionResult<IEnumerable<ActivityDto>>> GetMyActivities()
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return Unauthorized(new { Message = "User not authenticated" });
+            }
+
+            var myActivities = await _context.Activities
+                .Where(a => a.Attendees.Any(aa => aa.UserId == currentUserId))
+                .ProjectTo<ActivityDto>(mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return Ok(myActivities);
+        }
+
+
+        //  获取指定用户作为Host的活动
+        [HttpGet("user/{userId}/hosting")]
+        public async Task<ActionResult<IEnumerable<ActivityDto>>> GetActivitiesUserIsHosting(string userId)
+        {
+            var hostingActivities = await _context.Activities
+                .Where(a => a.Attendees.Any(aa => aa.UserId == userId && aa.IsHost))
+                .ProjectTo<ActivityDto>(mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return Ok(hostingActivities);
+        }
+
     }
 }

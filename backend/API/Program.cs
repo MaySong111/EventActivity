@@ -35,11 +35,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddIdentity<User, IdentityRole>(options =>
+builder.Services.AddIdentityCore<User>(options =>
 {
     // 要求邮箱必须唯一（不能两个用户用同一个邮箱）--下面这行:防止两个用户注册同一个邮箱,这样邮箱才能当"身份证"用
     options.User.RequireUniqueEmail = true;
 })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 

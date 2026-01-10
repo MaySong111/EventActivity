@@ -191,6 +191,46 @@ export async function registerUser(data) {
   return responseData;
 }
 
+
+// get current logged-in user all activities 
+export async function getMyActivities() {
+  var response = await fetch(`${BASE_URL}/activities/mine`, {
+    headers: getAuthHeaders(),
+  });
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to fetch my activities");
+  }
+  const data = await response.json();
+  return data;
+}
+
+// get activities where the specified user is the host
+export async function getHostedActivities(userId) {
+  var response = await fetch(`${BASE_URL}/activities/user/${userId}/hosting`, {
+    headers: getAuthHeaders(),
+  });
+  if (response.status === 401) {
+    window.location.href = "/login";
+    useAuthStore.getState().logout();
+    return;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to fetch hosted activities");
+  }
+  const data = await response.json();
+  return data;
+}
+
+
 // Profile APIs--------------------------------
 export async function editProfile(data) {
   const token = useAuthStore.getState().token;
@@ -207,6 +247,7 @@ export async function editProfile(data) {
     window.location.href = "/login";
     useAuthStore.getState().logout();
     return;
+
   }
 
   const responseData = await response.json();

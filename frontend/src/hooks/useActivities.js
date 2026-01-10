@@ -8,6 +8,8 @@ import {
   attendActivity,
   unattendActivity,
   toggleActivityCancellation,
+  getMyActivities,
+  getHostedActivities,
 } from "../http";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/useAuthStore";
@@ -44,6 +46,7 @@ export default function useActivities(
     },
   });
 
+  // 获取单个活动详情(id 是活动 ID，不是用户 ID。)
   const { data: activity, isLoading: isLoadingActivity } = useQuery({
     queryKey: ["activities", id],
     queryFn: () => getActivity(id),
@@ -56,6 +59,23 @@ export default function useActivities(
       };
     },
   });
+
+
+  // get current logged-in user all activities 
+  const {data: myActivities} = useQuery({
+    queryKey: ["myActivities"],
+    queryFn: () => getMyActivities(),
+    enabled: !!currentUser,
+  }); 
+
+  // get specific user's hosted activities
+  const {data: userHostedActivities} = useQuery({
+    queryKey: ["userHostedActivities", id],
+    queryFn: () => getHostedActivities(id),
+    enabled: !!id && !!currentUser,
+  }); 
+
+
 
   const createActivityMutation = useMutation({
     mutationFn: createActivity,
@@ -108,6 +128,8 @@ export default function useActivities(
       queryClient.invalidateQueries(["activities", id]);
       queryClient.invalidateQueries(["activities"]);
     },
+
+
   });
 
   return {
@@ -117,6 +139,8 @@ export default function useActivities(
     activitiesError,
     activity,
     isLoadingActivity,
+    myActivities,
+    userHostedActivities,
     createActivityMutation,
     updateActivityMutation,
     deleteActivityMutation,
