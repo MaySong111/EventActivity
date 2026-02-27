@@ -2,7 +2,7 @@
 
 A full-stack activity social platform where users can create, join, and manage events. Features real-time group chat, interactive maps, and fine-grained role-based access control.
 
-🔗 **Live Demo**: (https://events-activities.azurewebsites.net/)
+🔗 **Live Demo**: https://events-activities.azurewebsites.net/
 
 > **Test Account**
 >
