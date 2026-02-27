@@ -1,3 +1,19 @@
+好，我先列出我认为的亮点和优化点，你确认后再写。
+**技术亮点：**
+
+1. SignalR 实时评论，按 activity 分组推送，不是全局广播
+2. LocationIQ 地址自动补全 + Leaflet 地图展示
+3. TanStack Query 缓存优化，编辑模式直接用缓存不重新请求
+4. 分页 + 多维度筛选（日期、hosting、attending）在后端处理
+5. Create/Edit 复用同一组件，用 isEditMode 区分，useEffect 监听路由变化清空表单
+6. Save 按钮只有表单内容真正改变才激活，避免无意义请求
+7. 路由守卫 RequireAuth，未登录无法访问任何功能页
+8. 权限控制细粒度：host 和非 host 看到不同 UI，他人 profile 只读
+9. JWT 过期时间根据 Remember Me 动态设置（2小时 vs 7天）
+10. Zustand persist 持久化登录状态，刷新页面不丢失
+
+
+
 # 文件夹结构
 YourProject/
 ├── Data/
