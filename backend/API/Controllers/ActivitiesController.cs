@@ -38,7 +38,7 @@ namespace API.Controllers
 
             var query = _context.Activities.AsQueryable();
 
-            // 如果有开始日期筛选条件，只返回在该日期之后的活动
+            // if startDate is provided, filter activities that are on or after the startDate
             if (startDate.HasValue)
             {
                 query = query.Where(a => a.Date >= startDate.Value);
@@ -52,7 +52,7 @@ namespace API.Controllers
             // 1. get current user id
             var currentUserId = GetCurrentUserId();
 
-            // 如果有筛选条件，只返回当前用户主持的活动
+            // if filter is provided, filter activities based on whether the current user is hosting or attending the activity
             if (!string.IsNullOrEmpty(filter) && currentUserId != null)
             {
                 if (filter == "hosting")
