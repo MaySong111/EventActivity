@@ -6,7 +6,7 @@ namespace API.core.Dtos.Activity
     {
         public string Id { get; set; }
         public required string Title { get; set; }
-        public DateTime Date { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset Date { get; set; } = DateTimeOffset.UtcNow;
         public required string Description { get; set; }
         public required string Category { get; set; }
         public bool IsCancelled { get; set; }

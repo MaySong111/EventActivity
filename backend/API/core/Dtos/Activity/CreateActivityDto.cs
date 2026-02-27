@@ -7,7 +7,7 @@ namespace API.core.Dtos
         [Required]
         public string Title { get; set; } = "";
         [Required]
-        public DateTime Date { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset Date { get; set; } = DateTimeOffset.UtcNow;
         [Required]
         public string Description { get; set; }
         [Required]

@@ -33,7 +33,7 @@ namespace API.Controllers
         public async Task<ActionResult<List<ActivityDto>>> GetActivities([FromQuery] string? filter = "",
         [FromQuery] DateTime? startDate = null,
             [FromQuery] int currentPage = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageSize = 6)
         {
 
             var query = _context.Activities.AsQueryable();

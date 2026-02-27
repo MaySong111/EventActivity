@@ -26,13 +26,6 @@ export default function useAuth() {
       login(userInfo, token);
       navigate("/");
     },
-    onError: (error) => {
-      if (error.status === 400) {
-        toast.error(error.message);
-      } else {
-        toast.error("Login failed. Please try again.");
-      }
-    },
   });
 
   return { registerMutation, loginMutation };

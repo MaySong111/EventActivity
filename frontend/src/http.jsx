@@ -1,11 +1,12 @@
 import useAuthStore from "./store/useAuthStore";
 
-export const API_URL = "https://localhost:5001";
-export const BASE_URL = "https://localhost:5001/api";
+export const API_URL = import.meta.env.VITE_API_URL;
+export const BASE_URL = import.meta.env.VITE_BASE_URL;
+export const COMMENTS_URL = import.meta.env.VITE_COMMENTS_URL;
 export const LocationIQ_API_KEY =
   "https://api.locationiq.com/v1/autocomplete?key=pk.84379dc40b13d8829c0e786f398d8be7";
 
-export const pageSize = 10;
+export const pageSize = 6;
 
 function getAuthHeaders() {
   const token = useAuthStore.getState().token;
@@ -21,7 +22,7 @@ export async function getActivities(pageSize, currentPage, filter, startDate) {
     `${BASE_URL}/activities/?pageSize=${pageSize}&currentPage=${currentPage}&filter=${filter}&startDate=${dateStr}`,
     {
       headers: getAuthHeaders(),
-    }
+    },
   );
   if (response.status === 401) {
     window.location.href = "/login";
@@ -191,8 +192,7 @@ export async function registerUser(data) {
   return responseData;
 }
 
-
-// get current logged-in user all activities 
+// get current logged-in user all activities
 export async function getMyActivities() {
   var response = await fetch(`${BASE_URL}/activities/mine`, {
     headers: getAuthHeaders(),
@@ -230,7 +230,6 @@ export async function getHostedActivities(userId) {
   return data;
 }
 
-
 // Profile APIs--------------------------------
 export async function editProfile(data) {
   const token = useAuthStore.getState().token;
@@ -247,7 +246,6 @@ export async function editProfile(data) {
     window.location.href = "/login";
     useAuthStore.getState().logout();
     return;
-
   }
 
   const responseData = await response.json();
@@ -279,7 +277,7 @@ export async function getProfile(userId) {
 
 // Comments APIs--------------------------------
 export async function getComments(activityId) {
-  var response = await fetch(`${BASE_URL}/comments/${activityId}`, {
+  var response = await fetch(`${COMMENTS_URL}/${activityId}`, {
     headers: getAuthHeaders(),
   });
   if (response.status === 401) {
@@ -297,7 +295,7 @@ export async function getComments(activityId) {
 }
 
 export async function addComment({ id, body }) {
-  var response = await fetch(`${BASE_URL}/comments`, {
+  var response = await fetch(`${COMMENTS_URL}`, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({ id, body }),
@@ -316,7 +314,7 @@ export async function addComment({ id, body }) {
 }
 
 export async function deleteComment(commentId) {
-  var response = await fetch(`${BASE_URL}/comments/${commentId}`, {
+  var response = await fetch(`${COMMENTS_URL}/${commentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

@@ -17,7 +17,7 @@ import toast from "react-hot-toast";
 
 export default function useActivities(
   id = null,
-  pageSize = 10,
+  pageSize = 6,
   currentPage = 1,
   filter = "",
   startDate = null

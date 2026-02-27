@@ -1,4 +1,3 @@
-// using Microsoft.AspNetCore.Authentication;
 using System.Text;
 using API.core.AppDbContext;
 using API.core.AutomapperConfig;
@@ -9,7 +8,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +30,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
 builder.Services.AddIdentityCore<User>(options =>
@@ -56,7 +54,7 @@ builder.Services.AddCors(x =>
 {
     x.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins("http://localhost:3000", "https://events-activities.azurewebsites.net")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -75,9 +73,12 @@ app.UseHttpsRedirection();
 app.UseCors();
 
 app.UseRouting();
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<CommentHub>("/commentHub");
-
+app.MapFallbackToFile("index.html");
 app.Run();

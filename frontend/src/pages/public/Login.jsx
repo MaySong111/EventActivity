@@ -12,6 +12,7 @@ import {
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { useState } from "react";
 import useAuth from "../../hooks/useAuth";
+import toast from "react-hot-toast";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -57,13 +58,26 @@ export default function Login() {
       return;
     }
 
-    loginMutation.mutate({
-      email: formData.email,
-      password: formData.password,
-      rememberMe: formData.rememberMe,
-    });
+    loginMutation.mutate(
+      {
+        email: formData.email,
+        password: formData.password,
+        rememberMe: formData.rememberMe,
+      },
+      {
+        onError: (error) => {
+          console.log("Login error:", error);
+          if (error.message.toLowerCase().includes("email")) {
+            setErrors((prev) => ({ ...prev, email: error.message }));
+          } else if (error.message.toLowerCase().includes("password")) {
+            setErrors((prev) => ({ ...prev, password: error.message }));
+          } else {
+            toast.error(error.message);
+          }
+        },
+      },
+    );
   };
-
   return (
     <Container
       component="main"

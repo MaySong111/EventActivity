@@ -138,6 +138,7 @@ export default function ProfilePage() {
           {/* 编辑模式 */}
           {isEditing && isOwnProfile ? (
             <ProfileEdit
+            
               formData={formData}
               setFormData={setFormData}
               handleSubmit={handleSubmit}

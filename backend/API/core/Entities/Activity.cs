@@ -6,7 +6,7 @@ namespace API.core.Entities
         // 我其他的项目就是直接用的guid--但是前端是需要id的,那前端的url里就会有一大串的guid,不太美观---所以直接将guid转成字符串--就是为了方便前端使用
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public required string Title { get; set; }
-        public DateTime Date { get; set; } = DateTime.UtcNow;
+       public DateTimeOffset Date { get; set; } = DateTimeOffset.UtcNow;
         public required string Description { get; set; }
         public required string Category { get; set; }
         public bool IsCancelled { get; set; }

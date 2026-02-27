@@ -9,6 +9,6 @@ namespace API.core.Entities
 
         // add additional props,like IsHost,DateJoined
         public bool IsHost { get; set; }
-        public DateTime DateJoined { get; set; } = DateTime.UtcNow;
+       public DateTimeOffset DateJoined { get; set; } = DateTimeOffset.UtcNow;
     }
 }

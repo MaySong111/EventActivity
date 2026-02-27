@@ -4,7 +4,7 @@ namespace API.core.Entities
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public required string Body { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         // nav props
         public required string ActivityId { get; set; }
         public Activity? Activity { get; set; }

@@ -55,16 +55,16 @@ export default function Register() {
     }
 
     if (!displayName) newErrors.displayName = "Display name is required";
-    if (!password) newErrors.password = "Password is required";
-
-    if (password && password.length < 6) {
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
-    }
-    if (password.toLowerCase() === password) {
+    } else if (password.toLowerCase() === password) {
       newErrors.password =
         "Password must contain at least one uppercase letter";
+    } else if (!/\d/.test(password)) {
+      newErrors.password = "Password must contain at least one number";
     }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
